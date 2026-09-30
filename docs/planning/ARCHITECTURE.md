@@ -187,87 +187,148 @@ El desarrollo visual se organiza en dos fases para garantizar estabilidad inmedi
 
 ---
 
-## 5. Pipeline de Codificación y Perfiles FFmpeg
+## 5. Pipeline de Codificación y Perfiles FFmpeg Extensibles
 
 El renderizado final se orquesta a través de **`@remotion/renderer`**, aprovechando su gestión automática de pestañas de Chromium, concurrencia y reciclaje de memoria, mientras se inyectan argumentos personalizados de FFmpeg vía `overrideFfmpegArgs`.
 
+### 5.1 Filosofía de Perfiles: Presets Base + Parámetros Sobreescribibles
+
+El sistema **no es rígido**: los perfiles predefinidos (`tiktok`, `whatsapp`) son únicamente **presets de conveniencia** probados para las plataformas más comunes.
+
+El pipeline permite:
+1. **Crear perfiles personalizados** en un catálogo declarativo (`encoding-profiles.json`) o dentro del `config.json` de cada proyecto.
+2. **Herencia de perfiles:** Extender un perfil base (ej. `tiktok`) y modificar únicamente los valores requeridos (ej. subir bitrate a 16M o forzar un GOP diferente) sin recompilar el proyecto.
+3. **Sobreescritura dinámica por CLI:** Pasar cualquier parámetro puntual directamente en la terminal (ej: `--bitrate 15M`, `--crf 18`, `--gop 120`, `--preset fast`).
+
 ```
-                    [ Chromium Headless (Captura de Cuadros) ]
-                                       │
-                                       ▼
-                       @remotion/renderer (renderMedia)
-                                       │
-                ┌──────────────────────┴──────────────────────┐
-                ▼                                             ▼
-       [ PERFIL A: TIKTOK / REELS ]                  [ PERFIL B: WHATSAPP LITE ]
-       • Resolución: 1080x1920 (9:16)                • Resolución: 1080x1920 (9:16)
-       • FPS: 30                                     • FPS: 30
-       • Bitrate: 10 Mbps (VBR)                      • Bitrate: 2.8 Mbps
-       • Maxrate: 12 Mbps / Buf: 15 Mbps             • Maxrate: 3.2 Mbps / Buf: 4 Mbps
-       • GOP: 60 frames cerrado (2s)                 • GOP: 30 frames cerrado (1s)
-       • VUI: Rec. 709 / Limited Range               • VUI: Rec. 709 / Limited Range
-       • H.264 High Profile 4.2                      • H.264 Main Profile 4.0
-       • Audio: AAC 192 kbps estéreo                 • Audio: AAC 128 kbps estéreo
-       • Objetivo: Nitidez máxima sin recompresión   • Objetivo: Archivo ligero (< 16 MB)
+                              [ Preset Base (ej. "tiktok") ]
+                                            │
+                                            ▼
+                 [ Config de Proyecto / Custom Profile (config.json) ]
+                                            │
+                                            ▼
+                    [ Flags de Terminal CLI (--bitrate, --crf) ]
+                                            │
+                                            ▼
+               ┌────────────────────────────────────────────────────────┐
+               │ Perfil Resuelto en Caliente (EncodingProfile)          │
+               │ • Codec: libx264 / h264_nvenc                          │
+               │ • Bitrate / CRF / Preset                               │
+               │ • Estructura GOP & VUI (Rec. 709)                      │
+               └───────────────────────────┬────────────────────────────┘
+                                           │
+                                           ▼
+                            @remotion/renderer (renderMedia)
+                                  + overrideFfmpegArgs
 ```
 
-### 5.1 Implementación de `overrideFfmpegArgs`
+### 5.2 Presets de Referencia Incluidos
+
+| Parámetro | Preset: `tiktok` (Master) | Preset: `whatsapp` (Lite) |
+| :--- | :--- | :--- |
+| **Resolución** | 1080x1920 (9:16) | 1080x1920 (9:16) |
+| **FPS** | 30 | 30 |
+| **Bitrate Objetivo** | 10 Mbps (VBR) | 2.8 Mbps |
+| **Maxrate / Bufsize** | 12 Mbps / 15 Mbps | 3.2 Mbps / 4 Mbps |
+| **GOP (Keyframes)** | 60 frames (2s a 30fps) cerrado | 30 frames (1s a 30fps) cerrado |
+| **Colorimetría VUI** | BT.709 / Limited range (`tv`) | BT.709 / Limited range (`tv`) |
+| **H.264 Profile / Level** | High / 4.2 | Main / 4.0 |
+| **Audio** | AAC 192 kbps estéreo (48 kHz) | AAC 128 kbps estéreo (44.1 kHz) |
+| **Propósito** | Máxima nitidez sin recompresión | Peso menor a 16 MB para chats/estados |
+
+---
+
+### 5.3 Esquema Declarativo del Perfil (`EncodingProfile`)
 
 ```typescript
-export function getFfmpegArgsForProfile(profile: "tiktok" | "whatsapp", useGpu: boolean): string[] {
-  const commonVui = [
-    "-color_primaries", "bt709",
-    "-color_trc", "bt709",
-    "-colorspace", "bt709",
-    "-color_range", "tv",
-  ];
+export interface EncodingProfile {
+  name: string;
+  base?: string;                 // Perfil del que hereda (ej. "tiktok")
+  useGpu?: boolean;              // true para h264_nvenc, false para libx264
+  videoCodec?: string;           // "libx264" | "h264_nvenc" | ...
+  preset?: string;               // "slow", "medium", "p6", etc.
+  tune?: string;                 // "hq", "film", etc.
+  crf?: number;                  // Modo CRF psicovisual (ej. 18 - 23)
+  bitrate?: string;              // "10M", "2800k", etc.
+  maxrate?: string;              // "12M", etc.
+  bufsize?: string;              // "15M", etc.
+  gop?: number;                  // Tamaño de grupo de imágenes (frames)
+  profile?: string;              // "high", "main", "baseline"
+  level?: string;                // "4.2", "4.0", etc.
+  audioCodec?: string;           // "aac"
+  audioBitrate?: string;         // "192k", "128k"
+  colorPrimaries?: string;       // "bt709"
+  colorTrc?: string;             // "bt709"
+  colorSpace?: string;           // "bt709"
+  colorRange?: string;           // "tv"
+  customArgs?: string[];         // Flags adicionales libres de FFmpeg
+}
+```
 
-  if (profile === "tiktok") {
-    const videoCodecArgs = useGpu
-      ? ["-c:v", "h264_nvenc", "-preset", "p6", "-tune", "hq"]
-      : ["-c:v", "libx264", "-preset", "slow"];
+### 5.4 Inyección Programática (`overrideFfmpegArgs`)
 
-    return [
-      ...videoCodecArgs,
-      "-profile:v", "high",
-      "-level:v", "4.2",
-      "-b:v", "10M",
-      "-maxrate", "12M",
-      "-bufsize", "15M",
-      "-g", "60",
-      "-keyint_min", "30",
-      "-sc_threshold", "0",
-      "-movflags", "+faststart",
-      ...commonVui,
-    ];
+```typescript
+export function buildFfmpegArgs(profile: EncodingProfile): string[] {
+  const args: string[] = [];
+
+  // 1. Códec y Aceleración
+  if (profile.useGpu) {
+    args.push("-c:v", "h264_nvenc");
+    if (profile.preset) args.push("-preset", profile.preset);
+    if (profile.tune) args.push("-tune", profile.tune);
+  } else {
+    args.push("-c:v", profile.videoCodec || "libx264");
+    if (profile.preset) args.push("-preset", profile.preset);
   }
 
-  // Perfil WhatsApp Lite
-  return [
-    "-c:v", "libx264",
-    "-preset", "medium",
-    "-profile:v", "main",
-    "-level:v", "4.0",
-    "-b:v", "2800k",
-    "-maxrate", "3200k",
-    "-bufsize", "4000k",
-    "-g", "30",
-    "-keyint_min", "30",
-    "-sc_threshold", "0",
-    "-movflags", "+faststart",
-    ...commonVui,
-  ];
+  // 2. Control de Tasa (CRF o Bitrate VBR)
+  if (profile.crf !== undefined) {
+    args.push("-crf", profile.crf.toString());
+  } else if (profile.bitrate) {
+    args.push("-b:v", profile.bitrate);
+    if (profile.maxrate) args.push("-maxrate", profile.maxrate);
+    if (profile.bufsize) args.push("-bufsize", profile.bufsize);
+  }
+
+  // 3. Estructura GOP
+  if (profile.gop) {
+    args.push("-g", profile.gop.toString(), "-keyint_min", Math.floor(profile.gop / 2).toString(), "-sc_threshold", "0");
+  }
+
+  // 4. Perfil y Nivel H.264
+  if (profile.profile) args.push("-profile:v", profile.profile);
+  if (profile.level) args.push("-level:v", profile.level);
+
+  // 5. Metadatos de Colorimetría VUI (Rec. 709)
+  args.push(
+    "-color_primaries", profile.colorPrimaries || "bt709",
+    "-color_trc", profile.colorTrc || "bt709",
+    "-colorspace", profile.colorSpace || "bt709",
+    "-color_range", profile.colorRange || "tv"
+  );
+
+  // 6. Optimización para Streaming Web / Redes
+  args.push("-movflags", "+faststart");
+
+  // 7. Flags adicionales personalizados si se definieron
+  if (profile.customArgs) {
+    args.push(...profile.customArgs);
+  }
+
+  return args;
 }
 ```
 
 ---
 
-## 6. Comandos del Flujo de Trabajo
+## 6. Comandos del Flujo de Trabajo y Ejemplos de Exportación
 
 | Comando | Función |
 | :--- | :--- |
-| `npm run prepare -- --project <nombre>` | Procesa audio (MP3, WAV, FLAC) a FFT/ritmos y parsea LRC a JSON. |
-| `npm run start` | Abre **Remotion Studio** con scrubber interactivo y previsualización. |
-| `npm run render -- --project <nombre> --profile tiktok` | Renderiza video maestro para TikTok / Instagram Reels. |
-| `npm run render -- --project <nombre> --profile whatsapp` | Renderiza video ligero (<16 MB) para WhatsApp. |
-| `npm run render -- --project <nombre> --gpu` | Renderiza acelerado por GPU NVIDIA NVENC. |
+| `npm run prepare -- --project <nombre>` | Procesa audio (MP3, WAV, FLAC) a FFT/ritmos y normaliza letras a `generated/`. |
+| `npm run start` | Abre **Remotion Studio** con timeline interactivo y previsualización. |
+| `npm run render -- --project <nombre> --profile tiktok` | Renderiza con preset maestro para TikTok / Instagram Reels. |
+| `npm run render -- --project <nombre> --profile whatsapp` | Renderiza con preset ligero para WhatsApp. |
+| `npm run render -- --project <nombre> --profile custom-profile` | Renderiza usando un perfil personalizado declarado en `config.json`. |
+| `npm run render -- --project <nombre> --profile tiktok --bitrate 16M --gop 90` | Hereda del preset TikTok y **sobreescribe parámetros puntuales al vuelo**. |
+| `npm run render -- --project <nombre> --gpu` | Habilita aceleración por hardware NVIDIA NVENC. |
