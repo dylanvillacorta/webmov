@@ -53,7 +53,9 @@ webmov/
   │       │   └── assets/                # Imágenes, videos B-roll, SVGs
   │       ├── generated/                 # CACHÉ DERIVADA REGENERABLE (Consumida por React)
   │       │   ├── audio-analysis.json    # FFT, bajos y ritmos por frame + _meta
-  │       │   └── lyrics.json            # Pistas normalizadas palabra por palabra + _meta
+  │       │   └── lyrics/                # Pistas normalizadas independientes por archivo
+  │       │       ├── lead.json          # Pista lead normalizada + _meta (schemaVersion)
+  │       │       └── backing.json       # Pista backing normalizada + _meta (schemaVersion)
   │       └── exports/                   # Videos MP4 renderizados
   ├── src/
   │   ├── compositions/                  # Composiciones de Remotion
@@ -153,72 +155,77 @@ export const AudioPulse: React.FC<{ analysis: AudioAnalysisData }> = ({ analysis
 
 ---
 
-### 3.2 Trazabilidad de Letras, Parsing Multi-Pista y Metadatos (`generated/lyrics.json`)
+### 3.2 Trazabilidad de Letras, Parsing Multi-Pista y Metadatos de Esquema (`generated/lyrics/<trackId>.json`)
 
-Para mantener retrocompatibilidad, trazabilidad y permitir migraciones futuras, todo archivo generado en `generated/` incluye un bloque de metadatos `_meta`. El sistema admite **múltiples pistas de letras simultáneas** (dúos, coros, ad-libs o traducción bilingüe) con marcas de tiempo, velocidades y estilos independientes.
+Para evitar cuellos de botella y acoplamiento monolítico, las letras **no se centralizan en un único archivo**. El pipeline procesa y genera un archivo JSON derivado e independiente por cada pista encontrada en `sources/lyrics/`.
+
+#### Principios Clave:
+1. **Descentralización y Mapeo 1:1:**
+   * Cada archivo fuente en `sources/lyrics/` (ej. `lead.lrc`, `backing.lrc`, `traduccion.json`) genera su homólogo en `generated/lyrics/<trackId>.json`.
+   * Si en el proyecto solo se modifica `backing.lrc`, el script `prepare` solo invalida y regenera `backing.json`, manteniendo intacto el resto de la caché.
+2. **Propósito de `schemaVersion` en `_meta`:**
+   * El campo `schemaVersion` corresponde a la **versión de la especificación técnica del parser/esquema de WebMov**, **NO** a la versión de la canción ni de la letra.
+   * Su objetivo es puramente técnico y de migración: si en una actualización futura de WebMov (ej. versión 2.0 o 5.0) cambia la estructura del JSON (por ejemplo, incorporando pitch musical, fonemas IPA o divisiones silábicas), el motor puede detectar si un archivo fue generado bajo el esquema `1.0.0` y ejecutar un adaptador de conversión o solicitar reejecutar `npm run prepare`.
 
 #### Flujo de Ingesta Multi-Pista:
 1. **Detección Automática de Pistas:**
-   El pipeline escanea `sources/lyrics/` procesando todos los archivos `.lrc` y `.json`. El identificador de pista (`trackId`) se deriva directamente del nombre de archivo (ej. `lead.lrc` $\rightarrow$ `"lead"`, `backing.json` $\rightarrow$ `"backing"`). Si solo existe un archivo (ej. `track.lrc`), se asigna a `"main"`.
+   El pipeline escanea `sources/lyrics/` procesando todos los archivos `.lrc` y `.json`. El identificador de pista (`trackId`) se deriva del nombre base del archivo (ej. `lead.lrc` $\rightarrow$ `"lead"`). Si solo existe un archivo genérico (ej. `track.lrc`), se asigna a `"main"`.
 2. **Si el insumo es `.lrc` (`sources/lyrics/*.lrc`):**
-   El conversor parsea las etiquetas `[mm:ss.xx] <mm:ss.xx> palabra`, calcula los intervalos `startMs` y `endMs`, valida solapamientos y normaliza la pista.
+   El conversor parsea las etiquetas `[mm:ss.xx] <mm:ss.xx> palabra`, calcula los intervalos `startMs` y `endMs`, valida solapamientos y escribe el resultado directamente en `generated/lyrics/<trackId>.json`.
 3. **Si el insumo ya es `.json` (`sources/lyrics/*.json`):**
-   Si la fuente proviene de un modelo externo (ej. Whisper o transcripción automática con timestamps a nivel de palabra), `prepare` valida su esquema y lo integra al compendio de pistas.
+   Si la fuente proviene de un modelo externo (ej. Whisper o transcripción automática con timestamps por palabra), `prepare` valida su esquema y lo normaliza en su respectivo `generated/lyrics/<trackId>.json`.
 
-#### Estructura con Metadatos (`generated/lyrics.json`):
+#### Estructura de Pista Individual (`generated/lyrics/lead.json`):
 ```json
 {
   "_meta": {
     "generator": "webmov",
-    "version": "1.1.0",
+    "schemaVersion": "1.0.0",
     "generatedAt": "2026-09-30T18:15:00.000Z",
-    "sources": [
-      {
-        "trackId": "lead",
-        "sourceFile": "sources/lyrics/lead.lrc",
-        "sourceHash": "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890"
-      },
-      {
-        "trackId": "backing",
-        "sourceFile": "sources/lyrics/backing.lrc",
-        "sourceHash": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321"
-      }
-    ]
+    "trackId": "lead",
+    "sourceFile": "sources/lyrics/lead.lrc",
+    "sourceHash": "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890"
   },
-  "tracks": {
-    "lead": {
-      "id": "lead",
-      "lines": [
-        {
-          "id": "lead-1",
-          "startMs": 1250,
-          "endMs": 4100,
-          "text": "Creando contenido programático",
-          "words": [
-            { "text": "Creando", "startMs": 1250, "endMs": 1720 },
-            { "text": "contenido", "startMs": 1720, "endMs": 2350 },
-            { "text": "programático", "startMs": 2350, "endMs": 4100 }
-          ]
-        }
-      ]
-    },
-    "backing": {
-      "id": "backing",
-      "lines": [
-        {
-          "id": "backing-1",
-          "startMs": 1800,
-          "endMs": 4200,
-          "text": "programático (oh yeah)",
-          "words": [
-            { "text": "programático", "startMs": 1800, "endMs": 2800 },
-            { "text": "(oh", "startMs": 2850, "endMs": 3400 },
-            { "text": "yeah)", "startMs": 3450, "endMs": 4200 }
-          ]
-        }
+  "lines": [
+    {
+      "id": "lead-1",
+      "startMs": 1250,
+      "endMs": 4100,
+      "text": "Creando contenido programático",
+      "words": [
+        { "text": "Creando", "startMs": 1250, "endMs": 1720 },
+        { "text": "contenido", "startMs": 1720, "endMs": 2350 },
+        { "text": "programático", "startMs": 2350, "endMs": 4100 }
       ]
     }
-  }
+  ]
+}
+```
+
+#### Estructura de Pista Secundaria (`generated/lyrics/backing.json`):
+```json
+{
+  "_meta": {
+    "generator": "webmov",
+    "schemaVersion": "1.0.0",
+    "generatedAt": "2026-09-30T18:15:00.000Z",
+    "trackId": "backing",
+    "sourceFile": "sources/lyrics/backing.lrc",
+    "sourceHash": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321"
+  },
+  "lines": [
+    {
+      "id": "backing-1",
+      "startMs": 1800,
+      "endMs": 4200,
+      "text": "programático (oh yeah)",
+      "words": [
+        { "text": "programático", "startMs": 1800, "endMs": 2800 },
+        { "text": "(oh", "startMs": 2850, "endMs": 3400 },
+        { "text": "yeah)", "startMs": 3450, "endMs": 4200 }
+      ]
+    }
+  ]
 }
 ```
 

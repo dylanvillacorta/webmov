@@ -46,13 +46,13 @@ flowchart TD
   - Parser de Enhanced LRC a esquema estandarizado (cálculo de `startMs` y `endMs` por palabra).
   - Soporte de ingesta directa de archivos `.json` colocados en `sources/lyrics/`.
   - Validación matemática de tiempos (sin solapamientos negativos) independiente por pista.
-  - Generación de `projects/<nombre>/generated/lyrics.json` con mapa de `tracks` y metadatos `_meta`.
+  - Generación modular de archivos individuales en `projects/<nombre>/generated/lyrics/<trackId>.json` con metadatos `_meta` (`schemaVersion` del parser de WebMov).
 - [ ] **CLI Unificado de Preparación (`scripts/prepare-project.ts`):**
   - Orquestador invocado mediante `npm run prepare -- --project <nombre>`.
 
 ### 1.2 Criterio de Aceptación
-* Ejecutar `npm run prepare -- --project sample` lee los insumos de `sources/` y genera exitosamente `generated/audio-analysis.json` y `generated/lyrics.json`.
-* `lyrics.json` contiene la estructura indexada de pistas (`tracks`), incluyendo encabezado `_meta` con hashes de los archivos procesados.
+* Ejecutar `npm run prepare -- --project sample` lee los insumos de `sources/` y genera exitosamente `generated/audio-analysis.json` y los archivos independientes `generated/lyrics/<trackId>.json`.
+* Cada archivo de letra incluye su encabezado `_meta` con la versión técnica del esquema (`schemaVersion`) y el hash de su archivo fuente.
 * Ante un archivo LRC malformado o falta de audio, el script emite un error descriptivo en consola indicando el archivo y la línea exacta.
 
 ---
@@ -64,7 +64,7 @@ flowchart TD
 ### 2.1 Tareas a Realizar
 - [ ] **Configuración Raíz de Remotion (`src/Root.tsx` e `index.ts`):**
   - Registro de `<Composition />` con formato vertical nativo: $1080 \times 1920$ px a 30 FPS.
-  - Cargador dinámico que enlaza las `props` del proyecto seleccionado (`config.json`, `lyrics.json`, `audio-analysis.json`).
+  - Cargador dinámico que enlaza las `props` del proyecto seleccionado (`config.json`, pistas en `generated/lyrics/*.json`, `audio-analysis.json`).
 - [ ] **Componente de Tipografía Cinética Reutilizable (`KineticSubtitles.tsx`):**
   - Componente desacoplado capaz de renderizar cualquier pista de letras de forma independiente según sus props (`lines`, `position`, `fontSize`, colores).
   - Sincronización palabra por palabra con `useCurrentFrame()` y `fps`.
