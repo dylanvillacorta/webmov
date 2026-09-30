@@ -26,5 +26,5 @@ Este repositorio contiene **WebMov**, un pipeline programático de generación d
 
 ## 📚 Documentación de Referencia
 
-* Consulta [ARCHITECTURE.md](./planning/ARCHITECTURE.md) para detalles exhaustivos de esquemas (`_meta`), perfiles FFmpeg y arquitectura.
+* Consulta [ARCHITECTURE.md](./docs/planning/ARCHITECTURE.md) para detalles exhaustivos de esquemas (`_meta`), perfiles FFmpeg y arquitectura.
 * Consulta [README.md](./README.md) para visión general del proyecto.
