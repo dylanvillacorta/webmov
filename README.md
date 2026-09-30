@@ -44,4 +44,5 @@ npm run render -- --project promo-single-01 --profile whatsapp
 ## 📖 Documentación y Planificación
 
 * 👉 [**ARCHITECTURE.md**](./docs/planning/ARCHITECTURE.md): Especificaciones técnicas detalladas, esquemas de datos y perfiles FFmpeg.
+* 👉 [**PIPELINE.md**](./docs/planning/PIPELINE.md): Diagramas visuales de flujo, ciclo de vida de ejecución y reglas de caché.
 * 👉 [**ROADMAP.md**](./docs/planning/ROADMAP.md): Plan de implementación secuencial por hitos y criterios de aceptación.

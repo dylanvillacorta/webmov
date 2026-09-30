@@ -394,8 +394,9 @@ export function buildFfmpegArgs(profile: EncodingProfile): string[] {
 
 ---
 
-## 7. Plan de Implementación y Fases
+## 7. Documentos Complementarios
 
-Para consultar el desglose detallado de hitos de desarrollo, tareas específicas y criterios de aceptación verificables:
-
-👉 [**ROADMAP.md**](./ROADMAP.md)
+* Para consultar el **diagrama de flujo interactivo**, el ciclo de vida de ejecución paso a paso y la matriz de reglas de caché:
+  👉 [**PIPELINE.md**](./PIPELINE.md)
+* Para consultar el desglose detallado de hitos de desarrollo, tareas específicas y criterios de aceptación verificables:
+  👉 [**ROADMAP.md**](./ROADMAP.md)
