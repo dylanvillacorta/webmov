@@ -46,22 +46,22 @@ El diseño aplica el principio de **Fuente Única de Verdad (Single Source of Tr
 webmov/
   ├── projects/
   │   └── promo-single-01/               # Proyecto específico
-  │       ├── config.json                # Configuración de estilo, capas y parámetros
+  │       ├── config.json                # Configuración de estilo, capas, subtítulos y parámetros
   │       ├── sources/                   # FUENTE ÚNICA DE VERDAD (Insumos originales)
   │       │   ├── audio/                 # track.mp3 / track.wav / track.flac
-  │       │   ├── lyrics/                # track.lrc (o track.json fuente de Whisper)
+  │       │   ├── lyrics/                # lead.lrc, backing.lrc (o .json fuentes)
   │       │   └── assets/                # Imágenes, videos B-roll, SVGs
   │       ├── generated/                 # CACHÉ DERIVADA REGENERABLE (Consumida por React)
   │       │   ├── audio-analysis.json    # FFT, bajos y ritmos por frame + _meta
-  │       │   └── lyrics.json            # Letra palabra por palabra normalizada + _meta
+  │       │   └── lyrics.json            # Pistas normalizadas palabra por palabra + _meta
   │       └── exports/                   # Videos MP4 renderizados
   ├── src/
   │   ├── compositions/                  # Composiciones de Remotion
   │   │   ├── MainComposition.tsx        # Composición vertical principal
-  │   │   ├── KineticSubtitles.tsx       # Subtítulos cinéticos karaoke
+  │   │   ├── KineticSubtitles.tsx       # Subtítulos cinéticos karaoke (multi-pista)
   │   │   └── AudioWaveform2D.tsx        # Elementos 2D reactivos al sonido
   │   ├── audio/                         # Algoritmos de análisis FFT y ritmos
-  │   ├── lrc/                           # Parser y validador de Enhanced LRC
+  │   ├── lrc/                           # Parser y validador de Enhanced LRC multi-pista
   │   ├── Root.tsx                       # Registro de composiciones Remotion
   │   └── index.ts                       # Punto de entrada
   └── scripts/
@@ -83,6 +83,25 @@ webmov/
     "secondaryColor": "#FF0055",
     "backgroundColor": "#0A0A0A",
     "fontFamily": "Inter, Montserrat, sans-serif"
+  },
+  "subtitles": {
+    "tracks": [
+      {
+        "trackId": "lead",
+        "position": { "y": "62%" },
+        "fontSize": 56,
+        "primaryColor": "#FFE600",
+        "activeScale": 1.15
+      },
+      {
+        "trackId": "backing",
+        "position": { "y": "40%" },
+        "fontSize": 38,
+        "primaryColor": "#00E5FF",
+        "opacity": 0.85,
+        "activeScale": 1.08
+      }
+    ]
   },
   "layers": {
     "showSubtitles": true,
@@ -134,39 +153,72 @@ export const AudioPulse: React.FC<{ analysis: AudioAnalysisData }> = ({ analysis
 
 ---
 
-### 3.2 Trazabilidad de Letras, Parsing y Metadatos (`generated/lyrics.json`)
+### 3.2 Trazabilidad de Letras, Parsing Multi-Pista y Metadatos (`generated/lyrics.json`)
 
-Para mantener retrocompatibilidad, trazabilidad y permitir migraciones futuras, todo archivo generado en `generated/` incluye un bloque de metadatos `_meta`.
+Para mantener retrocompatibilidad, trazabilidad y permitir migraciones futuras, todo archivo generado en `generated/` incluye un bloque de metadatos `_meta`. El sistema admite **múltiples pistas de letras simultáneas** (dúos, coros, ad-libs o traducción bilingüe) con marcas de tiempo, velocidades y estilos independientes.
 
-#### Flujo de Ingesta de Letras:
-1. **Si el insumo es `.lrc` (`sources/lyrics/*.lrc`):**
-   El conversor parsea las etiquetas `[mm:ss.xx] <mm:ss.xx> palabra`, calcula los intervalos `startMs` y `endMs`, valida solapamientos y escribe el resultado en `generated/lyrics.json`.
-2. **Si el insumo ya es `.json` (`sources/lyrics/*.json`):**
-   Si la fuente proviene de un modelo externo (ej. Whisper o transcripción automática), `prepare` valida su esquema y lo normaliza a `generated/lyrics.json`.
+#### Flujo de Ingesta Multi-Pista:
+1. **Detección Automática de Pistas:**
+   El pipeline escanea `sources/lyrics/` procesando todos los archivos `.lrc` y `.json`. El identificador de pista (`trackId`) se deriva directamente del nombre de archivo (ej. `lead.lrc` $\rightarrow$ `"lead"`, `backing.json` $\rightarrow$ `"backing"`). Si solo existe un archivo (ej. `track.lrc`), se asigna a `"main"`.
+2. **Si el insumo es `.lrc` (`sources/lyrics/*.lrc`):**
+   El conversor parsea las etiquetas `[mm:ss.xx] <mm:ss.xx> palabra`, calcula los intervalos `startMs` y `endMs`, valida solapamientos y normaliza la pista.
+3. **Si el insumo ya es `.json` (`sources/lyrics/*.json`):**
+   Si la fuente proviene de un modelo externo (ej. Whisper o transcripción automática con timestamps a nivel de palabra), `prepare` valida su esquema y lo integra al compendio de pistas.
 
 #### Estructura con Metadatos (`generated/lyrics.json`):
 ```json
 {
   "_meta": {
     "generator": "webmov",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "generatedAt": "2026-09-30T18:15:00.000Z",
-    "sourceFile": "sources/lyrics/track.lrc",
-    "sourceHash": "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890"
+    "sources": [
+      {
+        "trackId": "lead",
+        "sourceFile": "sources/lyrics/lead.lrc",
+        "sourceHash": "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890"
+      },
+      {
+        "trackId": "backing",
+        "sourceFile": "sources/lyrics/backing.lrc",
+        "sourceHash": "fedcba0987654321fedcba0987654321fedcba0987654321fedcba0987654321"
+      }
+    ]
   },
-  "lines": [
-    {
-      "id": "line-1",
-      "startMs": 1250,
-      "endMs": 4100,
-      "text": "Creando contenido programático",
-      "words": [
-        { "text": "Creando", "startMs": 1250, "endMs": 1720 },
-        { "text": "contenido", "startMs": 1720, "endMs": 2350 },
-        { "text": "programático", "startMs": 2350, "endMs": 4100 }
+  "tracks": {
+    "lead": {
+      "id": "lead",
+      "lines": [
+        {
+          "id": "lead-1",
+          "startMs": 1250,
+          "endMs": 4100,
+          "text": "Creando contenido programático",
+          "words": [
+            { "text": "Creando", "startMs": 1250, "endMs": 1720 },
+            { "text": "contenido", "startMs": 1720, "endMs": 2350 },
+            { "text": "programático", "startMs": 2350, "endMs": 4100 }
+          ]
+        }
+      ]
+    },
+    "backing": {
+      "id": "backing",
+      "lines": [
+        {
+          "id": "backing-1",
+          "startMs": 1800,
+          "endMs": 4200,
+          "text": "programático (oh yeah)",
+          "words": [
+            { "text": "programático", "startMs": 1800, "endMs": 2800 },
+            { "text": "(oh", "startMs": 2850, "endMs": 3400 },
+            { "text": "yeah)", "startMs": 3450, "endMs": 4200 }
+          ]
+        }
       ]
     }
-  ]
+  }
 }
 ```
 
@@ -177,7 +229,7 @@ Para mantener retrocompatibilidad, trazabilidad y permitir migraciones futuras, 
 El desarrollo visual se organiza en dos fases para garantizar estabilidad inmediata:
 
 ### Fase 1 (Prioridad Actual: Tipografía Cinética y Reactividad 2D)
-* **Subtítulos palabra por palabra (Karaoke):** Resaltado activo milisegundo a milisegundo con efectos de escala y colorimetría dinámica.
+* **Subtítulos palabra por palabra (Karaoke) Multi-Pista:** Renderizado y resaltado activo milisegundo a milisegundo con efectos de escala y colorimetría dinámica. Admite múltiples pistas simultáneas con posiciones, tamaños y paletas independientes configurables vía `config.json`.
 * **Componentes 2D reactivos:** Barras de espectro, ondas sonoras, halos de brillo (glow) y fondos pulsantes impulsados por `audio-analysis.json`.
 * **Capas de medios B-roll:** Fondos en video o imágenes estáticas integrados con `<OffthreadVideo />` y `<Img />` de Remotion.
 

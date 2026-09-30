@@ -35,39 +35,41 @@ flowchart TD
 - [ ] **Estructura de Carpetas:**
   - Crear directorios `src/`, `scripts/`, `projects/sample/`.
 - [ ] **Creación del Proyecto Modelo (`projects/sample/`):**
-  - Insumos de prueba: `sources/audio/sample.mp3`, `sources/lyrics/sample.lrc` (con marcas palabra por palabra `<mm:ss.xx>`), `sources/assets/`.
-  - Manifiesto `config.json` inicial (dimensiones 1080x1920, 30 FPS, paleta de colores).
+  - Insumos de prueba: `sources/audio/sample.mp3`, `sources/lyrics/` con soporte multi-pista (ej. `lead.lrc` con marcas palabra por palabra `<mm:ss.xx>` y opcionalmente `backing.lrc`), `sources/assets/`.
+  - Manifiesto `config.json` inicial (dimensiones 1080x1920, 30 FPS, paleta de colores, mapeo de pistas `subtitles.tracks`).
 - [ ] **Módulo Analizador de Audio (`scripts/prepare/audio-analyzer.ts`):**
   - Decodificación automática mediante FFmpeg a buffer WAV PCM temporal (44.1 kHz, 16-bit).
   - Cálculo de FFT, RMS y detección de picos/beats a intervalos exactos de $\frac{1}{30}$ s.
   - Generación de `projects/<nombre>/generated/audio-analysis.json` con metadatos `_meta`.
-- [ ] **Módulo Parser de Letras (`scripts/prepare/lrc-parser.ts`):**
+- [ ] **Módulo Parser de Letras Multi-Pista (`scripts/prepare/lrc-parser.ts`):**
+  - Detección automática de todas las pistas (`.lrc` o `.json`) presentes en `sources/lyrics/`.
   - Parser de Enhanced LRC a esquema estandarizado (cálculo de `startMs` y `endMs` por palabra).
   - Soporte de ingesta directa de archivos `.json` colocados en `sources/lyrics/`.
-  - Validación matemática de tiempos (sin solapamientos negativos).
-  - Generación de `projects/<nombre>/generated/lyrics.json` con metadatos `_meta`.
+  - Validación matemática de tiempos (sin solapamientos negativos) independiente por pista.
+  - Generación de `projects/<nombre>/generated/lyrics.json` con mapa de `tracks` y metadatos `_meta`.
 - [ ] **CLI Unificado de Preparación (`scripts/prepare-project.ts`):**
   - Orquestador invocado mediante `npm run prepare -- --project <nombre>`.
 
 ### 1.2 Criterio de Aceptación
 * Ejecutar `npm run prepare -- --project sample` lee los insumos de `sources/` y genera exitosamente `generated/audio-analysis.json` y `generated/lyrics.json`.
-* Ambos archivos incluyen el encabezado `_meta` con la versión de WebMov y el hash del archivo fuente.
-* Ante un archivo LRC malformado o falta de audio, el script emite un error descriptivo en consola indicando la línea exacta.
+* `lyrics.json` contiene la estructura indexada de pistas (`tracks`), incluyendo encabezado `_meta` con hashes de los archivos procesados.
+* Ante un archivo LRC malformado o falta de audio, el script emite un error descriptivo en consola indicando el archivo y la línea exacta.
 
 ---
 
 ## 📌 Hito 2: Motor de Composición Visual en Remotion Studio (`npm run start`)
 
-> **Objetivo:** Construir los componentes de video en React y permitir la previsualización interactiva con audio sincronizado, karaoke dinámico y guías de interfaz de redes sociales en Remotion Studio.
+> **Objetivo:** Construir los componentes de video en React y permitir la previsualización interactiva con audio sincronizado, karaoke dinámico multi-pista y guías de interfaz de redes sociales en Remotion Studio.
 
 ### 2.1 Tareas a Realizar
 - [ ] **Configuración Raíz de Remotion (`src/Root.tsx` e `index.ts`):**
   - Registro de `<Composition />` con formato vertical nativo: $1080 \times 1920$ px a 30 FPS.
   - Cargador dinámico que enlaza las `props` del proyecto seleccionado (`config.json`, `lyrics.json`, `audio-analysis.json`).
-- [ ] **Componente de Tipografía Cinética (`KineticSubtitles.tsx`):**
+- [ ] **Componente de Tipografía Cinética Reutilizable (`KineticSubtitles.tsx`):**
+  - Componente desacoplado capaz de renderizar cualquier pista de letras de forma independiente según sus props (`lines`, `position`, `fontSize`, colores).
   - Sincronización palabra por palabra con `useCurrentFrame()` y `fps`.
   - Estados visuales dinámicos: *palabra activa* (resaltado de color, escala aumentada, glow), *palabras ya cantadas* (opacidad normal) y *palabras futuras* (baja opacidad).
-  - Ajuste de estilos mediante `config.json` (fuente, tamaños, espaciados, colores).
+  - Renderizado concurrente de múltiples pistas en pantalla (ej. voz principal y coros con sus propios tiempos y posiciones sin colisiones).
 - [ ] **Componentes Reactivos al Ritmo 2D (`AudioWaveform2D.tsx` y `AudioPulse.tsx`):**
   - Barras espectrales y ondas sonoras generadas mediante Canvas/SVG reactivas a `bass`, `mid`, `treble` y `rms`.
   - Efectos de pulso y resplandor al compás cuando `isBeat === true`.
@@ -79,7 +81,8 @@ flowchart TD
 
 ### 2.2 Criterio de Aceptación
 * Ejecutar `npm run start` abre Remotion Studio en el navegador.
-* El timeline permite hacer *scrub* cuadro a cuadro y verificar que las palabras del subtítulo se iluminan en el frame exacto de su marca de tiempo.
+* El timeline permite hacer *scrub* cuadro a cuadro y verificar que las palabras de cada pista de subtítulos se iluminan en el frame exacto de su marca de tiempo independiente.
+* Se pueden visualizar 2 o más pistas de letras en pantalla simultáneamente en distintas coordenadas espaciales sin superposición indeseada.
 * Las ondas 2D y pulsos visuales reaccionan audiblemente sincronizados con el audio de `sample.mp3`.
 * El overlay de Safe Zones de TikTok/Reels se puede encender y apagar desde la interfaz visual sin errores.
 
