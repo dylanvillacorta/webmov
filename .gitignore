@@ -1,0 +1,108 @@
+# ==============================================================================
+# WebMov (.gitignore)
+# Configuración para proyecto de Video Programático con React, Remotion y Desktop
+# ==============================================================================
+
+# --- Dependencias ---
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# --- Compilación y Salidas de Build ---
+dist/
+dist-electron/
+dist-ssr/
+build/
+out/
+release/
+*.tsbuildinfo
+.eslintcache
+
+# --- Remotion & Cache Gráfico ---
+.remotion/
+.cache/
+bundle/
+
+# --- Desktop Shell (Electron / Tauri) ---
+src-tauri/target/
+*.exe
+*.msi
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+
+# --- Binarios Locales de Render (FFmpeg / Chromium) ---
+bin/
+ffmpeg.exe
+ffprobe.exe
+ffmpeg/
+ffprobe/
+chrome-win/
+chromium/
+
+# --- Workspaces Locales, Renderizados y Medios Pesados ---
+# Los workspaces locales contienen proyectos de usuario, videos y audios pesados
+workspaces/*
+!workspaces/.gitkeep
+!workspaces/template/
+exports/
+renders/
+temp/
+tmp/
+
+# Archivos multimedia generados o de gran tamaño
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.webm
+*.wav
+*.flac
+
+# --- Logs y Diagnóstico ---
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Variables de Entorno y Secretos ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# --- IDEs y Sistema Operativo ---
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editores
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# VS Code (Permitir configuraciones y extensiones recomendadas del equipo)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
