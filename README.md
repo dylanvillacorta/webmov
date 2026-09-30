@@ -15,9 +15,9 @@
   * Ingesta de archivos Enhanced LRC (`.lrc`) con marcas palabra por palabra.
   * Análisis de audio offline precalculado (`audio-analysis.json`) con detección de transitorios, ritmos (beats) y bandas espectrales (Bass, Mid, Treble, RMS) a 30 FPS.
   * Soporte universal de audio: **MP3, WAV y FLAC**.
-* 🎨 **Estrategia Visual Progresiva:**
-  * **Fase 1:** Tipografía cinética (karaoke palabra por palabra), componentes 2D reactivos al sonido (espectros, ondas, glow) y capas B-roll.
-  * **Fase 2:** Capas 3D deterministas con WebGL y Three.js (`frameloop="never"`).
+* 🎨 **Estrategia Visual:**
+  * Tipografía cinética (karaoke palabra por palabra multi-pista), componentes 2D reactivos al sonido (espectros, ondas, glow) y capas B-roll.
+  * Extensiones 3D deterministas con WebGL / Three.js planificadas en [FUTURE_FEATURES.md](./docs/planning/FUTURE_FEATURES.md).
 * 🚀 **Pipeline de Exportación con FFmpeg (`@remotion/renderer`):**
   * **Master TikTok / Instagram Reels:** 10 Mbps VBR, GOP cerrado de 60 cuadros, colorimetría Rec. 709. Soporte para CPU (`libx264`) y GPU NVIDIA (`h264_nvenc`).
   * **WhatsApp Lite:** Perfil ligero (< 16 MB, 2.8 Mbps, GOP 30 cuadros) para evitar compresión destructiva en estados y chats.
@@ -46,3 +46,4 @@ npm run render -- --project promo-single-01 --profile whatsapp
 * 👉 [**ARCHITECTURE.md**](./docs/planning/ARCHITECTURE.md): Especificaciones técnicas detalladas, esquemas de datos y perfiles FFmpeg.
 * 👉 [**PIPELINE.md**](./docs/planning/PIPELINE.md): Diagramas visuales de flujo, ciclo de vida de ejecución y reglas de caché.
 * 👉 [**ROADMAP.md**](./docs/planning/ROADMAP.md): Plan de implementación secuencial por hitos y criterios de aceptación.
+* 👉 [**FUTURE_FEATURES.md**](./docs/planning/FUTURE_FEATURES.md): Backlog de funcionalidades futuras e iteraciones posteriores.

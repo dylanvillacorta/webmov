@@ -231,18 +231,16 @@ Para evitar cuellos de botella y acoplamiento monolítico, las letras **no se ce
 
 ---
 
-## 4. Estrategia Visual Progresiva
+## 4. Estrategia Visual: Tipografía Cinética y Reactividad 2D
 
-El desarrollo visual se organiza en dos fases para garantizar estabilidad inmediata:
+El núcleo visual de Remotion se enfoca en la máxima nitidez tipográfica y reactividad matemática:
 
-### Fase 1 (Prioridad Actual: Tipografía Cinética y Reactividad 2D)
 * **Subtítulos palabra por palabra (Karaoke) Multi-Pista:** Renderizado y resaltado activo milisegundo a milisegundo con efectos de escala y colorimetría dinámica. Admite múltiples pistas simultáneas con posiciones, tamaños y paletas independientes configurables vía `config.json`.
 * **Componentes 2D reactivos:** Barras de espectro, ondas sonoras, halos de brillo (glow) y fondos pulsantes impulsados por `audio-analysis.json`.
 * **Capas de medios B-roll:** Fondos en video o imágenes estáticas integrados con `<OffthreadVideo />` y `<Img />` de Remotion.
 
-### Fase 2 (Siguiente Iteración: WebGL y Three.js Determinista)
-* Integración de `@react-three/fiber` desactivando el reloj en tiempo real (`frameloop="never"`).
-* Renderizado forzado cuadro a cuadro gobernado estrictamente por `useCurrentFrame()`.
+> [!NOTE]
+> Para la especificación de extensiones gráficas 3D planificadas para iteraciones posteriores (Three.js / WebGL determinista), consulta [**FUTURE_FEATURES.md**](./FUTURE_FEATURES.md).
 
 ---
 
@@ -400,3 +398,5 @@ export function buildFfmpegArgs(profile: EncodingProfile): string[] {
   👉 [**PIPELINE.md**](./PIPELINE.md)
 * Para consultar el desglose detallado de hitos de desarrollo, tareas específicas y criterios de aceptación verificables:
   👉 [**ROADMAP.md**](./ROADMAP.md)
+* Para consultar las **funcionalidades avanzadas y extensiones planificadas a futuro** (Three.js 3D determinista):
+  👉 [**FUTURE_FEATURES.md**](./FUTURE_FEATURES.md)

@@ -116,7 +116,7 @@ flowchart TD
 
 ## 📌 Hito 4 (Opcional / Backlog): Capa 3D WebGL / Three.js Determinista
 
-> **Objetivo:** Incorporar elementos gráficos tridimensionales reactivos al compás sin comprometer el determinismo cuadro a cuadro ni la estabilidad de memoria.
+> **Objetivo:** Incorporar elementos gráficos tridimensionales reactivos al compás sin comprometer el determinismo cuadro a cuadro ni la estabilidad de memoria. Para la especificación técnica de esta iteración posterior, consulta [**FUTURE_FEATURES.md**](./FUTURE_FEATURES.md).
 
 ### 4.1 Tareas a Realizar
 - [ ] Integración de dependencias: `three`, `@react-three/fiber`, `@types/three`.
