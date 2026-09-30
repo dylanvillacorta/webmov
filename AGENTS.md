@@ -22,6 +22,12 @@ Este repositorio contiene **WebMov**, un pipeline programático de generación d
    * `npm run start`: Lanza **Remotion Studio** para desarrollo visual y previsualización interactiva.
    * `npm run render -- --project <nombre> --profile [tiktok|whatsapp]`: Renderiza con `@remotion/renderer` inyectando perfiles FFmpeg.
 
+4. **Operaciones de Git y GitHub:**
+   * Regido por la skill local [.agents/skills/github-actuator/SKILL.md](.agents/skills/github-actuator/SKILL.md).
+   * **Prohibido commit o push automático:** siempre presentar resumen previo (`git status -s`, `git diff --stat`) y solicitar confirmación explícita al usuario en el chat antes de ejecutar `git commit` o `git push`.
+   * **Prohibido push forzado (`--force`):** salvo indicación explícita.
+
+
 ---
 
 ## 📚 Documentación de Referencia
