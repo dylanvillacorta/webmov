@@ -41,8 +41,7 @@ npm run render -- --project promo-single-01 --profile whatsapp
 
 ---
 
-## 📖 Documentación de Arquitectura
+## 📖 Documentación y Planificación
 
-Para especificaciones técnicas detalladas, esquemas de datos y parámetros de codificación, consulta:
-
-👉 [**ARCHITECTURE.md**](./docs/planning/ARCHITECTURE.md)
+* 👉 [**ARCHITECTURE.md**](./docs/planning/ARCHITECTURE.md): Especificaciones técnicas detalladas, esquemas de datos y perfiles FFmpeg.
+* 👉 [**ROADMAP.md**](./docs/planning/ROADMAP.md): Plan de implementación secuencial por hitos y criterios de aceptación.

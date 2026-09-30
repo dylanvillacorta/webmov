@@ -332,3 +332,11 @@ export function buildFfmpegArgs(profile: EncodingProfile): string[] {
 | `npm run render -- --project <nombre> --profile custom-profile` | Renderiza usando un perfil personalizado declarado en `config.json`. |
 | `npm run render -- --project <nombre> --profile tiktok --bitrate 16M --gop 90` | Hereda del preset TikTok y **sobreescribe parámetros puntuales al vuelo**. |
 | `npm run render -- --project <nombre> --gpu` | Habilita aceleración por hardware NVIDIA NVENC. |
+
+---
+
+## 7. Plan de Implementación y Fases
+
+Para consultar el desglose detallado de hitos de desarrollo, tareas específicas y criterios de aceptación verificables:
+
+👉 [**ROADMAP.md**](./ROADMAP.md)
