@@ -14,7 +14,7 @@ El proyecto adopta un **enfoque Developer-First** centrado en código React y or
 ├────────────────────────────────────────────────────────────────────────┤
 │ 1. PREPARACIÓN (CLI)                                                   │
 │    npm run prepare -- --project <nombre>                               │
-│    ├── Decodificación de Audio Universal (FFmpeg: MP3, WAV, FLAC)     │
+│    ├── Decodificación de Audio Universal (FFmpeg: MP3, WAV, FLAC)      │
 │    ├── Análisis Espectral y Detección de Ritmo (audio-analysis.json)   │
 │    └── Parser de Enhanced LRC a Marcas de Tiempo (lyrics.json)         │
 ├────────────────────────────────────────────────────────────────────────┤
@@ -239,9 +239,6 @@ El núcleo visual de Remotion se enfoca en la máxima nitidez tipográfica y rea
 * **Componentes 2D reactivos:** Barras de espectro, ondas sonoras, halos de brillo (glow) y fondos pulsantes impulsados por `audio-analysis.json`.
 * **Capas de medios B-roll:** Fondos en video o imágenes estáticas integrados con `<OffthreadVideo />` y `<Img />` de Remotion.
 
-> [!NOTE]
-> Para la especificación de extensiones gráficas 3D planificadas para iteraciones posteriores (Three.js / WebGL determinista), consulta [**FUTURE_FEATURES.md**](./FUTURE_FEATURES.md).
-
 ---
 
 ## 5. Pipeline de Codificación y Perfiles FFmpeg Extensibles
@@ -257,26 +254,12 @@ El pipeline permite:
 2. **Herencia de perfiles:** Extender un perfil base (ej. `tiktok`) y modificar únicamente los valores requeridos (ej. subir bitrate a 16M o forzar un GOP diferente) sin recompilar el proyecto.
 3. **Sobreescritura dinámica por CLI:** Pasar cualquier parámetro puntual directamente en la terminal (ej: `--bitrate 15M`, `--crf 18`, `--gop 120`, `--preset fast`).
 
-```
-                              [ Preset Base (ej. "tiktok") ]
-                                            │
-                                            ▼
-                 [ Config de Proyecto / Custom Profile (config.json) ]
-                                            │
-                                            ▼
-                    [ Flags de Terminal CLI (--bitrate, --crf) ]
-                                            │
-                                            ▼
-               ┌────────────────────────────────────────────────────────┐
-               │ Perfil Resuelto en Caliente (EncodingProfile)          │
-               │ • Codec: libx264 / h264_nvenc                          │
-               │ • Bitrate / CRF / Preset                               │
-               │ • Estructura GOP & VUI (Rec. 709)                      │
-               └───────────────────────────┬────────────────────────────┘
-                                           │
-                                           ▼
-                            @remotion/renderer (renderMedia)
-                                  + overrideFfmpegArgs
+```mermaid
+flowchart TD
+    Preset["Preset Base (ej. 'tiktok')"] --> Config["Config de Proyecto / Custom Profile (config.json)"]
+    Config --> CLI["Flags de Terminal CLI (--bitrate, --crf)"]
+    CLI --> Resolved["Perfil Resuelto en Caliente (EncodingProfile)<br/>• Codec: libx264 / h264_nvenc<br/>• Bitrate / CRF / Preset<br/>• Estructura GOP & VUI (Rec. 709)"]
+    Resolved --> Render["@remotion/renderer (renderMedia)<br/>+ overrideFfmpegArgs"]
 ```
 
 ### 5.2 Presets de Referencia Incluidos
