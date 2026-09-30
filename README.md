@@ -45,4 +45,4 @@ npm run render -- --project promo-single-01 --profile whatsapp
 
 Para especificaciones técnicas detalladas, esquemas de datos y parámetros de codificación, consulta:
 
-👉 [**ARCHITECTURE.md**](./ARCHITECTURE.md)
+👉 [**ARCHITECTURE.md**](./planning/ARCHITECTURE.md)
