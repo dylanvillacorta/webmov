@@ -36,20 +36,24 @@ El proyecto adopta un **enfoque Developer-First** centrado en código React y or
 
 ---
 
-## 2. Estructura de Proyectos y Gestión de Datos
+## 2. Estructura de Proyectos y Gestión de Datos (SSOT y Caché Derivada)
 
-Los proyectos residen localmente en el directorio `projects/` dentro del repositorio. Cada carpeta contiene todos los insumos necesarios para que un video sea completamente independiente y reproducible.
+El diseño aplica el principio de **Fuente Única de Verdad (Single Source of Truth - SSOT)**:
+* **`sources/`:** Insumos originales humanos/externos (audio original, archivo `.lrc` o `.json` fuente, videos B-roll). Son inmutables para el pipeline y editables por el desarrollador.
+* **`generated/`:** Caché efímera y reproducible al 100%. Generada exclusivamente por `npm run prepare`. Si se necesitan correcciones finas de palabras o milisegundos, se corrigen en `sources/lyrics/` y se vuelve a ejecutar `prepare`.
 
 ```text
 webmov/
   ├── projects/
   │   └── promo-single-01/               # Proyecto específico
-  │       ├── audio.mp3                  # Audio fuente (MP3, WAV o FLAC)
-  │       ├── lyrics.lrc                 # Letra con marcas palabra por palabra
-  │       ├── config.json                # Configuración de estilo y props
-  │       ├── audio-analysis.json        # Autogenerado por 'prepare'
-  │       ├── lyrics.json                # Autogenerado por 'prepare'
-  │       ├── assets/                    # Imágenes, videos B-roll, SVGs
+  │       ├── config.json                # Configuración de estilo, capas y parámetros
+  │       ├── sources/                   # FUENTE ÚNICA DE VERDAD (Insumos originales)
+  │       │   ├── audio/                 # track.mp3 / track.wav / track.flac
+  │       │   ├── lyrics/                # track.lrc (o track.json fuente de Whisper)
+  │       │   └── assets/                # Imágenes, videos B-roll, SVGs
+  │       ├── generated/                 # CACHÉ DERIVADA REGENERABLE (Consumida por React)
+  │       │   ├── audio-analysis.json    # FFT, bajos y ritmos por frame + _meta
+  │       │   └── lyrics.json            # Letra palabra por palabra normalizada + _meta
   │       └── exports/                   # Videos MP4 renderizados
   ├── src/
   │   ├── compositions/                  # Composiciones de Remotion
@@ -93,11 +97,11 @@ webmov/
 
 ## 3. Ingesta de Audio y Sistema de Subtítulos Cinéticos
 
-### 3.1 Soporte Universal de Audio y FFT Offline (`audio-analysis.json`)
+### 3.1 Soporte Universal de Audio y FFT Offline (`generated/audio-analysis.json`)
 
 Para evitar cuellos de botella y desfases durante la previsualización y el render, el audio se procesa **offline** antes de entrar a React:
 
-1. **Formatos Soportados:** Obligatoriamente **MP3**, **WAV** y **FLAC**, además de cualquier contenedor legible por FFmpeg.
+1. **Formatos Soportados:** Obligatoriamente **MP3**, **WAV** y **FLAC**, además de cualquier contenedor legible por FFmpeg ubicado en `sources/audio/`.
 2. **Decodificación:** FFmpeg extrae un stream PCM WAV estandarizado (44.1 kHz, 16-bit, mono/estéreo).
 3. **Análisis Espectral:** Un algoritmo en Node.js segmenta el audio en ventanas correspondientes exactamente a $\frac{1}{\text{FPS}}$ segundos ($\approx 33.3\text{ ms}$ a 30 FPS).
 4. **Métricas Extraídas por Cuadro:**
@@ -130,15 +134,26 @@ export const AudioPulse: React.FC<{ analysis: AudioAnalysisData }> = ({ analysis
 
 ---
 
-### 3.2 Parser de Enhanced LRC a JSON Estandarizado (`lyrics.json`)
+### 3.2 Trazabilidad de Letras, Parsing y Metadatos (`generated/lyrics.json`)
 
-El estándar Enhanced LRC define marcas de tiempo por palabra mediante etiquetas angulares:
-`[00:01.25] <00:01.25> Creando <00:01.72> contenido <00:02.35> programático`
+Para mantener retrocompatibilidad, trazabilidad y permitir migraciones futuras, todo archivo generado en `generated/` incluye un bloque de metadatos `_meta`.
 
-El script de preparación convierte y valida el archivo a este esquema neutro:
+#### Flujo de Ingesta de Letras:
+1. **Si el insumo es `.lrc` (`sources/lyrics/*.lrc`):**
+   El conversor parsea las etiquetas `[mm:ss.xx] <mm:ss.xx> palabra`, calcula los intervalos `startMs` y `endMs`, valida solapamientos y escribe el resultado en `generated/lyrics.json`.
+2. **Si el insumo ya es `.json` (`sources/lyrics/*.json`):**
+   Si la fuente proviene de un modelo externo (ej. Whisper o transcripción automática), `prepare` valida su esquema y lo normaliza a `generated/lyrics.json`.
 
+#### Estructura con Metadatos (`generated/lyrics.json`):
 ```json
 {
+  "_meta": {
+    "generator": "webmov",
+    "version": "1.0.0",
+    "generatedAt": "2026-09-30T18:15:00.000Z",
+    "sourceFile": "sources/lyrics/track.lrc",
+    "sourceHash": "a1b2c3d4e5f67890abcdef1234567890abcdef1234567890abcdef1234567890"
+  },
   "lines": [
     {
       "id": "line-1",
