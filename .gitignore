@@ -45,8 +45,11 @@ ffprobe/
 chrome-win/
 chromium/
 
-# --- Workspaces Locales, Renderizados y Medios Pesados ---
-# Los workspaces locales contienen proyectos de usuario, videos y audios pesados
+# --- Proyectos Locales, Renderizados y Medios Pesados ---
+# Los proyectos locales contienen audios pesados y videos renderizados
+projects/*
+!projects/.gitkeep
+!projects/sample/
 workspaces/*
 !workspaces/.gitkeep
 !workspaces/template/
