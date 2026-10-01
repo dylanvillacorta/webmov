@@ -73,6 +73,7 @@ export interface ProjectConfig {
   width?: number;
   height?: number;
   durationInFrames?: number;
+  defaultProfile?: string;
   theme?: ProjectTheme;
   subtitles?: {
     tracks?: TrackConfig[];

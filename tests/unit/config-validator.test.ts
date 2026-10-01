@@ -12,6 +12,7 @@ describe("Módulo D: Configuración y Validación de Esquemas (config.json)", ()
     expect(config.theme?.backgroundColor).toBe("#0A0A0A");
     expect(config.layers?.showSubtitles).toBe(true);
     expect(config.layers?.showWaveform).toBe(true);
+    expect(config.defaultProfile).toBe("tiktok");
   });
 
   it("CFG-02: Tipos y rangos inválidos arrojan error pedagógico con la propiedad exacta", () => {
@@ -63,5 +64,24 @@ describe("Módulo D: Configuración y Validación de Esquemas (config.json)", ()
     expect(validated.subtitles?.tracks?.length).toBe(2);
     expect(validated.subtitles?.tracks?.[0].primaryColor).toBe("#FF0055");
     expect(validated.subtitles?.tracks?.[1].opacity).toBe(0.8);
+  });
+
+  it("CFG-06: Valida y preserva defaultProfile correctamente o arroja error si es inválido", () => {
+    const config = validateProjectConfig({
+      defaultProfile: "whatsapp",
+    });
+    expect(config.defaultProfile).toBe("whatsapp");
+
+    expect(() =>
+      validateProjectConfig({
+        defaultProfile: "",
+      })
+    ).toThrow(/defaultProfile/);
+
+    expect(() =>
+      validateProjectConfig({
+        defaultProfile: 12345,
+      })
+    ).toThrow(/defaultProfile/);
   });
 });

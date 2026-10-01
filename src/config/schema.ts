@@ -34,6 +34,7 @@ export const ProjectConfigSchema = z.object({
   width: z.number().int().positive("'width' debe ser un número positivo (ej: 1080).").default(1080),
   height: z.number().int().positive("'height' debe ser un número positivo (ej: 1920).").default(1920),
   durationInFrames: z.number().int().positive().default(300),
+  defaultProfile: z.string().min(1, "El 'defaultProfile' no puede ser una cadena vacía.").default("tiktok"),
   theme: z
     .object({
       primaryColor: z
