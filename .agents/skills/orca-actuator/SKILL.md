@@ -93,6 +93,14 @@ Cuando la feature pasa todos los tests:
 
 ## 🛑 Reglas de Seguridad y Coordinación
 
+0. **Inmutabilidad Absoluta del Workspace Raíz (`develop` - Regla Cero):**
+   - El workspace raíz es **estrictamente de solo lectura operativa**: reservado únicamente para el Agente Coordinador Central (planificación, orquestación, lectura de documentación, inspección de diffs y merges hacia `develop`).
+   - **TERMINANTEMENTE PROHIBIDO** en el workspace raíz:
+     - Escribir o modificar archivos de código fuente, configs o assets.
+     - Crear archivos `package.json` o ejecutar `npm install` / `npm run`.
+     - Crear ramas directas o conmutar de rama (`git checkout -b`) en el directorio raíz.
+   - **TODA** codificación, scaffolding, instalación de dependencias, scripts y tests debe residir y ejecutarse **exclusivamente dentro de los worktrees independientes** (`orca worktree create`).
 1. **Localidad de Contexto:** Nunca separar el testing de la codificación en ramas diferentes para una misma funcionalidad. Deben convivir en el mismo workspace para evitar sobrecostos de sincronización y merge.
 2. **Un Solo Agente Central:** La sesión principal es la única que planifica, crea worktrees y orquesta la integración a la rama base.
 3. **Límite de Concurrencia:** Máximo 2 o 3 workspaces paralelos activos al mismo tiempo para no saturar memoria RAM ni causar colisiones de puertos en dev servers.
+4. **Ciclo de Scripts en Package.json:** Dado que `prepare` es un hook nativo en npm que se ejecuta automáticamente tras `npm install`, en los nuevos worktrees el script `"prepare"` debe tolerar llamadas sin parámetros (ej. omitiendo si no hay flags) o `npm install` debe ejecutarse con `--ignore-scripts` para evitar fallos antes de que el CLI esté implementado.

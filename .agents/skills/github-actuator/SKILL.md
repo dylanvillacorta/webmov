@@ -52,33 +52,44 @@ Protocolo estándar para operaciones de Git seguras, limpias y bajo control tota
 
 ---
 
-## 🔄 Flujo 1: Sincronización Segura (Actualizar desde Remoto)
+## 🔄 Flujo 1: Sincronización Segura y Rápida (Soft Sync)
 
-Para sincronizar la rama actual sin generar merge commits accidentales ni perder cambios locales:
+Para sincronizar la rama `develop` de forma automática, no destructiva y eficiente en tokens:
 
-```bash
-# 1. Obtener novedades del remoto
-git fetch origin --prune
+```powershell
+# Sincronización automática de develop (PowerShell):
+powershell -ExecutionPolicy Bypass -File scripts/sync-develop.ps1
 
-# 2. Revisar si hay commits entrantes (rápido)
-git log HEAD..@{u} --oneline
-
-# 3. Integrar únicamente si es fast-forward
-git pull --ff-only
+# O en Bash:
+./scripts/sync-develop.sh
 ```
-> *Si hay conflictos o cambios locales sin commitear, detenerse y consultar antes de realizar stash o merge.*
+
+**Comportamiento del script:**
+1. Protege archivos locales: si detecta cambios sin commitear, aborta sin tocar nada.
+2. Consulta `origin/develop`: si ya está al día, responde en milisegundos (`[sync] Rama 'develop' 100% al dia`).
+3. Si hay novedades del remoto y no hay cambios locales divergentes, ejecuta un `git pull --ff-only` automático y reporta los commits integrados.
+4. Si detecta divergencia, emite advertencia para intervención manual sin romper el árbol.
+
+> *Equivalente manual paso a paso:*
+> ```bash
+> git fetch origin --prune
+> git pull --ff-only origin develop
+> ```
+
 
 ---
 
-## 🌿 Flujo 2: Creación de Ramas de Trabajo
+## 🌿 Flujo 2: Creación de Ramas de Trabajo (Vía Orca Worktrees)
 
-Toda nueva tarea, feature o fix debe crearse derivada de `origin/develop`:
+Toda nueva tarea, feature o fix debe instanciarse **aislada en su propio worktree**, derivada de `origin/develop`, protegiendo el workspace raíz:
 
-```bash
-git checkout develop
-git pull --ff-only
-git checkout -b feature/<nombre-descriptivo>
+```powershell
+# En el workspace raíz (Agente Coordinador):
+orca worktree create --name feature/<nombre-descriptivo> --base-branch origin/develop --no-parent --json
 ```
+
+> **IMPORTANTE:** Nunca ejecutar `git checkout -b` en el workspace raíz de `develop`. El directorio raíz debe permanecer intacto en `develop` para actuar como nodo coordinador. Toda modificación de archivos se realiza en el path asignado al worktree independiente.
+
 
 ---
 

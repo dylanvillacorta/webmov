@@ -25,17 +25,19 @@ Este repositorio contiene **WebMov**, un pipeline programático de generación d
 
 4. **Operaciones de Git y GitHub:**
    * Regido por la skill local [.agents/skills/github-actuator/SKILL.md](.agents/skills/github-actuator/SKILL.md).
+   * **Sincronización Rápida y Segura:** Ejecutar `powershell -ExecutionPolicy Bypass -File scripts/sync-develop.ps1` para actualizar `develop` de forma no destructiva (fast-forward automático, sin consumo innecesario de tokens).
    * **Prohibido commit o push automático:** siempre presentar resumen previo (`git status -s`, `git diff --stat`) y solicitar confirmación explícita al usuario en el chat antes de ejecutar `git commit` o `git push`.
    * **Prohibido push forzado (`--force`):** salvo indicación explícita.
 
 5. **Orquestación Paralela en Orca IDE (Modelo Feature Lifecycle):**
    * Regido por la skill local [.agents/skills/orca-actuator/SKILL.md](.agents/skills/orca-actuator/SKILL.md).
    * La sesión en el workspace raíz actúa como **Agente Coordinador Central** (Planificación con `gemini-3.8-flash-high`).
-   * **1 Workspace por Feature:** Cada worktree aborda una feature o tarea completa donde coexisten:
+   * **Inmutabilidad Operativa del Workspace Raíz (`develop`):** El workspace raíz es de solo lectura operativa. Queda prohibido escribir código, ejecutar `npm install`, modificar `package.json` o conmutar ramas en el directorio raíz.
+   * **1 Workspace por Feature:** Cada worktree aborda una feature o tarea completa de forma aislada donde coexisten:
      * **Codificación:** `gemini-3.8-flash-low` (o `medium`) con esfuerzo bajo (`--effort low`).
      * **Testing & QA:** `gemini-3.8-flash-high` con esfuerzo alto (`--effort high`) sobre los mismos archivos locales.
    * **Paralelismo Horizontal:** Orca se utiliza para avanzar múltiples features independientes en simultáneo.
-   * Creación de worktrees siempre derivados de `origin/develop`, terminales interactivas (`agy -i`), timeouts de espera y marcado de estado (`completed`) al finalizar.
+   * Creación de worktrees siempre derivados de `origin/develop` (`orca worktree create --name feature/<nombre> --base-branch origin/develop --no-parent --json`), terminales interactivas (`agy -i`), timeouts de espera y marcado de estado (`completed`) al finalizar.
 
 
 ---
