@@ -138,6 +138,7 @@ flowchart LR
 
 * Cada pista de subtítulos es una instancia autónoma de `<KineticSubtitles />` con su propia coordenada $Y$, escala y paleta de color configuradas en `config.json`.
 * Ninguna capa de React accede a `sources/`; leen exclusivamente los datos ya normalizados en `generated/`.
+* **Red y Puertos Locales:** Remotion Studio se enlaza al puerto base `30900` dentro del rango dedicado y libre para el proyecto (**`30900` a `30999`**), permitiendo levantar múltiples instancias de preview en paralelo sin interferencias.
 
 ---
 
@@ -171,7 +172,7 @@ flowchart TD
 | Escenario del Desarrollador | ¿Requiere `prepare`? | ¿Qué ejecuta internamente? | Comando sugerido |
 | :--- | :--- | :--- | :--- |
 | **Proyecto nuevo o recién clonado** | **Obligatorio** | Decodificación audio FFT + Parsing de todas las pistas de letras | `npm run prepare -- --project <nombre>` |
-| **Continuar diseño visual existente** | **No** (Se salta por completo) | Abre directamente Remotion Studio consumiendo la caché existente | `npm run start` |
+| **Continuar diseño visual existente** | **No** (Se salta por completo) | Abre directamente Remotion Studio consumiendo la caché existente | `npm run start -- --port 30900` |
 | **Edición de un archivo de letra (`.lrc`)** | **Recomendado** | Omite audio FFT; procesa únicamente la pista modificada (<100ms) | `npm run prepare -- --project <nombre>` |
 | **Cambio de archivo de audio (`.mp3`/`.wav`)**| **Recomendado** | Recalcula audio FFT; omite parsing de letras | `npm run prepare -- --project <nombre>` |
 | **Exportación final directa** | **No** (si `generated/` está al día)| Empaqueta headless, renderiza cuadros e inyecta perfiles FFmpeg | `npm run render -- --project <nombre> --profile tiktok` |

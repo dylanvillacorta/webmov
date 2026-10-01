@@ -373,6 +373,13 @@ export function buildFfmpegArgs(profile: EncodingProfile): string[] {
 | `npm run render -- --project <nombre> --profile tiktok --bitrate 16M --gop 90` | Hereda del preset TikTok y **sobreescribe parámetros puntuales al vuelo**. |
 | `npm run render -- --project <nombre> --gpu` | Habilita aceleración por hardware NVIDIA NVENC. |
 
+### 6.1 Asignación de Puertos de Red Locales (`30900` - `30999`)
+
+Para cualquier servicio de red local en este proyecto (servidor de Remotion Studio, métricas o servidores auxiliares de previsualización):
+* **Rango dedicado y libre:** `30900` a `30999`.
+* **Puerto base recomendado:** `30900` (ej. `npm run start -- --port 30900`).
+* **Concurrencia en Orca:** Cuando se inicien previsualizaciones simultáneas en múltiples workspaces o worktrees, asignar puertos correlativos dentro de este bloque (`30900`, `30901`, `30902`, ...) para prevenir colisiones de red.
+
 ---
 
 ## 7. Documentos Complementarios

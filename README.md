@@ -31,13 +31,15 @@
 # 1. Preparar audio y letras del proyecto (genera audio-analysis.json y lyrics.json)
 npm run prepare -- --project promo-single-01
 
-# 2. Abrir Remotion Studio para desarrollo visual interactivo
-npm run start
+# 2. Abrir Remotion Studio para desarrollo visual interactivo (puerto base 30900)
+npm run start -- --port 30900
 
 # 3. Exportar video final optimizado para redes
 npm run render -- --project promo-single-01 --profile tiktok
 npm run render -- --project promo-single-01 --profile whatsapp
 ```
+
+> 🌐 **Puertos locales:** El proyecto tiene reservado y libre el rango de puertos **`30900` a `30999`** para Remotion Studio y previsualizaciones concurrentes en local.
 
 ---
 

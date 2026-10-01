@@ -28,6 +28,7 @@ flowchart TD
 > **Objetivo:** Establecer el repositorio base, configurar las herramientas de desarrollo y construir el motor de procesamiento offline para que cualquier audio y archivo de letras se convierta en datos limpios consumibles por React.
 
 ### 1.1 Tareas a Realizar
+
 - [ ] **Scaffolding del Proyecto:**
   - Inicializar `package.json` con dependencias base: `remotion`, `@remotion/cli`, `@remotion/renderer`, `react`, `react-dom`, `typescript`, `zod`, `meyda`.
   - Configurar `tsconfig.json` optimizado para Remotion y Node.js en Windows.
@@ -51,17 +52,19 @@ flowchart TD
   - Orquestador invocado mediante `npm run prepare -- --project <nombre>`.
 
 ### 1.2 Criterio de Aceptación
-* Ejecutar `npm run prepare -- --project sample` lee los insumos de `sources/` y genera exitosamente `generated/audio-analysis.json` y los archivos independientes `generated/lyrics/<trackId>.json`.
-* Cada archivo de letra incluye su encabezado `_meta` con la versión técnica del esquema (`schemaVersion`) y el hash de su archivo fuente.
-* Ante un archivo LRC malformado o falta de audio, el script emite un error descriptivo en consola indicando el archivo y la línea exacta.
+
+- Ejecutar `npm run prepare -- --project sample` lee los insumos de `sources/` y genera exitosamente `generated/audio-analysis.json` y los archivos independientes `generated/lyrics/<trackId>.json`.
+- Cada archivo de letra incluye su encabezado `_meta` con la versión técnica del esquema (`schemaVersion`) y el hash de su archivo fuente.
+- Ante un archivo LRC malformado o falta de audio, el script emite un error descriptivo en consola indicando el archivo y la línea exacta.
 
 ---
 
 ## 📌 Hito 2: Motor de Composición Visual en Remotion Studio (`npm run start`)
 
-> **Objetivo:** Construir los componentes de video en React y permitir la previsualización interactiva con audio sincronizado, karaoke dinámico multi-pista y guías de interfaz de redes sociales en Remotion Studio.
+> **Objetivo:** Construir los componentes de video en React y permitir la previsualización interactiva con audio sincronizado, karaoke dinámico multi-pista y guías de interfaz de redes sociales en Remotion Studio (puerto local base `30900`, rango reservado `30900` a `30999`).
 
 ### 2.1 Tareas a Realizar
+
 - [ ] **Configuración Raíz de Remotion (`src/Root.tsx` e `index.ts`):**
   - Registro de `<Composition />` con formato vertical nativo: $1080 \times 1920$ px a 30 FPS.
   - Cargador dinámico que enlaza las `props` del proyecto seleccionado (`config.json`, pistas en `generated/lyrics/*.json`, `audio-analysis.json`).
@@ -80,11 +83,12 @@ flowchart TD
   - Soporte para imagen estática con zoom sutil o video de fondo B-roll con `<OffthreadVideo />`, con filtros de desenfoque y viñeteado.
 
 ### 2.2 Criterio de Aceptación
-* Ejecutar `npm run start` abre Remotion Studio en el navegador.
-* El timeline permite hacer *scrub* cuadro a cuadro y verificar que las palabras de cada pista de subtítulos se iluminan en el frame exacto de su marca de tiempo independiente.
-* Se pueden visualizar 2 o más pistas de letras en pantalla simultáneamente en distintas coordenadas espaciales sin superposición indeseada.
-* Las ondas 2D y pulsos visuales reaccionan audiblemente sincronizados con el audio de `sample.mp3`.
-* El overlay de Safe Zones de TikTok/Reels se puede encender y apagar desde la interfaz visual sin errores.
+
+- Ejecutar `npm run start` abre Remotion Studio en el navegador en el puerto asignado (base `30900` dentro del rango libre `30900` a `30999`).
+- El timeline permite hacer *scrub* cuadro a cuadro y verificar que las palabras de cada pista de subtítulos se iluminan en el frame exacto de su marca de tiempo independiente.
+- Se pueden visualizar 2 o más pistas de letras en pantalla simultáneamente en distintas coordenadas espaciales sin superposición indeseada.
+- Las ondas 2D y pulsos visuales reaccionan audiblemente sincronizados con el audio de `sample.mp3`.
+- El overlay de Safe Zones de TikTok/Reels se puede encender y apagar desde la interfaz visual sin errores.
 
 ---
 
@@ -93,8 +97,9 @@ flowchart TD
 > **Objetivo:** Orquestar el renderizado final desatendido a video MP4 utilizando `@remotion/renderer` y Chromium Headless, inyectando perfiles de compresión FFmpeg optimizados para no sufrir degradación en redes.
 
 ### 3.1 Tareas a Realizar
+
 - [ ] **Sistema de Resolución de Perfiles (`scripts/render/profile-resolver.ts`):**
-  - Presets preconfigurados de referencia: `tiktok` (10 Mbps, GOP 60, VUI Rec. 709) y `whatsapp` (2.8 Mbps, GOP 30, <16 MB).
+  - Presets preconfigurados de referencia: `tiktok` (10 Mbps, GOP 60, VUI Rec. 709) y `whatsapp` (2.8 Mbps, GOP 30, &lt;16 MB).
   - Carga de perfiles personalizados declarados en `config.json` o en `encoding-profiles.json`.
   - Fusión en caliente con banderas de CLI (`--bitrate`, `--crf`, `--gop`, `--preset`, `--gpu`).
 - [ ] **Constructor de Argumentos FFmpeg (`buildFfmpegArgs`):**
@@ -108,33 +113,21 @@ flowchart TD
   - Guardado del archivo final en `projects/<nombre>/exports/<nombre>_<perfil>_<timestamp>.mp4`.
 
 ### 3.2 Criterio de Aceptación
-* Ejecutar `npm run render -- --project sample --profile tiktok` genera un archivo `.mp4` en `projects/sample/exports/`.
-* El video resultante cumple con: resolución exacta 1080x1920, 30 FPS, GOP cerrado de 60 cuadros y metadatos Rec. 709 verificables mediante `ffprobe`.
-* Ejecutar `npm run render -- --project sample --profile tiktok --bitrate 16M` aplica la sobreescritura de tasa de bits al vuelo sin modificar el código fuente.
 
----
-
-## 📌 Hito 4 (Opcional / Backlog): Capa 3D WebGL / Three.js Determinista
-
-> **Objetivo:** Incorporar elementos gráficos tridimensionales reactivos al compás sin comprometer el determinismo cuadro a cuadro ni la estabilidad de memoria. Para la especificación técnica de esta iteración posterior, consulta [**FUTURE_FEATURES.md**](./FUTURE_FEATURES.md).
-
-### 4.1 Tareas a Realizar
-- [ ] Integración de dependencias: `three`, `@react-three/fiber`, `@types/three`.
-- [ ] Implementación de canvas determinista con `frameloop="never"`.
-- [ ] Conductor de cuadro `FrameDriver` que dispara `gl.render(scene, camera)` rígidamente en cada `useCurrentFrame()`.
-- [ ] Malla procedural 3D (geometría interactiva) reactiva a los valores de `bass` y `isBeat` de `audio-analysis.json`.
-- [ ] Toggle `"enable3D"` en `config.json` para activar o desactivar la capa en la composición.
-
-### 4.2 Criterio de Aceptación
-* Al activar `"enable3D": true`, la escena 3D se renderiza idéntica cuadro a cuadro en el preview de Remotion Studio y en el archivo MP4 exportado por Chromium Headless.
+- Ejecutar `npm run render -- --project sample --profile tiktok` genera un archivo `.mp4` en `projects/sample/exports/`.
+- El video resultante cumple con: resolución exacta 1080x1920, 30 FPS, GOP cerrado de 60 cuadros y metadatos Rec. 709 verificables mediante `ffprobe`.
+- Ejecutar `npm run render -- --project sample --profile tiktok --bitrate 16M` aplica la sobreescritura de tasa de bits al vuelo sin modificar el código fuente.
 
 ---
 
 ## 📋 Resumen del Estado de los Hitos
 
-| Hito | Alcance Principal | Estado | Dependencia Previa |
-| :--- | :--- | :--- | :--- |
-| **Hito 1** | Fundación TS/Remotion + Ingesta CLI `prepare` | ⏳ **Siguiente Paso** | Ninguna |
-| **Hito 2** | Composición Visual 2D + Remotion Studio | ⏸️ Pendiente | Hito 1 |
-| **Hito 3** | Motor de Render FFmpeg + CLI `render` | ⏸️ Pendiente | Hito 2 |
-| **Hito 4** | Capa 3D Three.js Determinista | 💤 Opcional / Backlog | Hito 3 |
+
+| Hito       | Alcance Principal                             | Estado                | Dependencia Previa |
+| :---------- | :--------------------------------------------- | :--------------------- | :------------------ |
+| **Hito 1** | Fundación TS/Remotion + Ingesta CLI `prepare` | ⏳ **Siguiente Paso**  | Ninguna            |
+| **Hito 2** | Composición Visual 2D + Remotion Studio       | ⏸️ Pendiente          | Hito 1             |
+| **Hito 3** | Motor de Render FFmpeg + CLI `render`         | ⏸️ Pendiente          | Hito 2             |
+| **Hito 4** | Capa 3D Three.js Determinista                 | 💤 Opcional / Backlog | Hito 3             |
+
+

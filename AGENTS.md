@@ -17,10 +17,11 @@ Este repositorio contiene **WebMov**, un pipeline programático de generación d
    * Utiliza siempre `useCurrentFrame()` y `useVideoConfig()`.
    * Prohibido el uso de `Date.now()`, `performance.now()`, `requestAnimationFrame` o números aleatorios sin semilla dentro de las composiciones de video.
 
-3. **Flujo de Comandos:**
+3. **Flujo de Comandos y Puertos de Red:**
    * `npm run prepare -- --project <nombre>`: Procesa audio (MP3/WAV/FLAC) a FFT/ritmos y normaliza letras a `generated/`.
-   * `npm run start`: Lanza **Remotion Studio** para desarrollo visual y previsualización interactiva.
+   * `npm run start`: Lanza **Remotion Studio** para desarrollo visual y previsualización interactiva (puerto base `30900`).
    * `npm run render -- --project <nombre> --profile [tiktok|whatsapp]`: Renderiza con `@remotion/renderer` inyectando perfiles FFmpeg.
+   * **Puertos de Red Locales:** El rango libre y reservado para este proyecto en local es **`30900` a `30999`** (para Remotion Studio, servidores de preview o instancias concurrentes en Orca, ej. `--port 30900`, `30901`, etc.).
 
 4. **Operaciones de Git y GitHub:**
    * Regido por la skill local [.agents/skills/github-actuator/SKILL.md](.agents/skills/github-actuator/SKILL.md).
