@@ -1,0 +1,38 @@
+{
+  "tiktok": {
+    "name": "tiktok",
+    "useGpu": false,
+    "videoCodec": "libx264",
+    "preset": "medium",
+    "bitrate": "10M",
+    "maxrate": "12M",
+    "bufsize": "15M",
+    "gop": 60,
+    "profile": "high",
+    "level": "4.2",
+    "audioCodec": "aac",
+    "audioBitrate": "192k",
+    "colorPrimaries": "bt709",
+    "colorTrc": "bt709",
+    "colorSpace": "bt709",
+    "colorRange": "tv"
+  },
+  "whatsapp": {
+    "name": "whatsapp",
+    "useGpu": false,
+    "videoCodec": "libx264",
+    "preset": "medium",
+    "bitrate": "2800k",
+    "maxrate": "3200k",
+    "bufsize": "4000k",
+    "gop": 30,
+    "profile": "main",
+    "level": "4.0",
+    "audioCodec": "aac",
+    "audioBitrate": "128k",
+    "colorPrimaries": "bt709",
+    "colorTrc": "bt709",
+    "colorSpace": "bt709",
+    "colorRange": "tv"
+  }
+}

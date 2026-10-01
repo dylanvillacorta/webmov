@@ -1,0 +1,38 @@
+{
+  "title": "WebMov Sample Demo",
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "durationInFrames": 300,
+  "theme": {
+    "primaryColor": "#FFE600",
+    "secondaryColor": "#FF0055",
+    "backgroundColor": "#0A0A0A",
+    "fontFamily": "Inter, Montserrat, sans-serif"
+  },
+  "subtitles": {
+    "tracks": [
+      {
+        "trackId": "lead",
+        "position": { "y": "62%" },
+        "fontSize": 56,
+        "primaryColor": "#FFE600",
+        "activeScale": 1.15
+      },
+      {
+        "trackId": "backing",
+        "position": { "y": "42%" },
+        "fontSize": 38,
+        "primaryColor": "#00E5FF",
+        "opacity": 0.85,
+        "activeScale": 1.08
+      }
+    ]
+  },
+  "layers": {
+    "showSubtitles": true,
+    "showWaveform": true,
+    "showParticles": true,
+    "enable3D": false
+  }
+}

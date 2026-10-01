@@ -68,6 +68,7 @@ tmp/
 *.webm
 *.wav
 *.flac
+!projects/sample/sources/audio/*
 
 # --- Logs y Diagnóstico ---
 logs/
