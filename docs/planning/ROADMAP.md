@@ -27,26 +27,26 @@ flowchart TD
 
 ### 1.1 Tareas a Realizar
 
-- [ ] **Scaffolding del Proyecto:**
+- [x] **Scaffolding del Proyecto:**
   - Inicializar `package.json` con dependencias base: `remotion`, `@remotion/cli`, `@remotion/renderer`, `react`, `react-dom`, `typescript`, `zod`, `meyda`.
   - Configurar `tsconfig.json` optimizado para Remotion y Node.js en Windows.
   - Configurar scripts en `package.json`: `prepare`, `start`, `render`.
-- [ ] **Estructura de Carpetas:**
+- [x] **Estructura de Carpetas:**
   - Crear directorios `src/`, `scripts/`, `projects/sample/`.
-- [ ] **Creación del Proyecto Modelo (`projects/sample/`):**
+- [x] **Creación del Proyecto Modelo (`projects/sample/`):**
   - Insumos de prueba: `sources/audio/sample.mp3`, `sources/lyrics/` con soporte multi-pista (ej. `lead.lrc` con marcas palabra por palabra `<mm:ss.xx>` y opcionalmente `backing.lrc`), `sources/assets/`.
   - Manifiesto `config.json` inicial (dimensiones 1080x1920, 30 FPS, paleta de colores, mapeo de pistas `subtitles.tracks`).
-- [ ] **Módulo Analizador de Audio (`scripts/prepare/audio-analyzer.ts`):**
+- [x] **Módulo Analizador de Audio (`scripts/prepare/audio-analyzer.ts`):**
   - Decodificación automática mediante FFmpeg a buffer WAV PCM temporal (44.1 kHz, 16-bit).
   - Cálculo de FFT, RMS y detección de picos/beats a intervalos exactos de $\frac{1}{30}$ s.
   - Generación de `projects/<nombre>/generated/audio-analysis.json` con metadatos `_meta`.
-- [ ] **Módulo Parser de Letras Multi-Pista (`scripts/prepare/lrc-parser.ts`):**
+- [x] **Módulo Parser de Letras Multi-Pista (`scripts/prepare/lrc-parser.ts`):**
   - Detección automática de todas las pistas (`.lrc` o `.json`) presentes en `sources/lyrics/`.
   - Parser de Enhanced LRC a esquema estandarizado (cálculo de `startMs` y `endMs` por palabra).
   - Soporte de ingesta directa de archivos `.json` colocados en `sources/lyrics/`.
   - Validación matemática de tiempos (sin solapamientos negativos) independiente por pista.
   - Generación modular de archivos individuales en `projects/<nombre>/generated/lyrics/<trackId>.json` con metadatos `_meta` (`schemaVersion` del parser de WebMov).
-- [ ] **CLI Unificado de Preparación (`scripts/prepare-project.ts`):**
+- [x] **CLI Unificado de Preparación (`scripts/prepare-project.ts`):**
   - Orquestador invocado mediante `npm run prepare -- --project <nombre>`.
 
 ### 1.2 Criterio de Aceptación
@@ -63,21 +63,21 @@ flowchart TD
 
 ### 2.1 Tareas a Realizar
 
-- [ ] **Configuración Raíz de Remotion (`src/Root.tsx` e `index.ts`):**
+- [x] **Configuración Raíz de Remotion (`src/Root.tsx` e `index.ts`):**
   - Registro de `<Composition />` con formato vertical nativo: $1080 \times 1920$ px a 30 FPS.
   - Cargador dinámico que enlaza las `props` del proyecto seleccionado (`config.json`, pistas en `generated/lyrics/*.json`, `audio-analysis.json`).
-- [ ] **Componente de Tipografía Cinética Reutilizable (`KineticSubtitles.tsx`):**
+- [x] **Componente de Tipografía Cinética Reutilizable (`KineticSubtitles.tsx`):**
   - Componente desacoplado capaz de renderizar cualquier pista de letras de forma independiente según sus props (`lines`, `position`, `fontSize`, colores).
   - Sincronización palabra por palabra con `useCurrentFrame()` y `fps`.
   - Estados visuales dinámicos: *palabra activa* (resaltado de color, escala aumentada, glow), *palabras ya cantadas* (opacidad normal) y *palabras futuras* (baja opacidad).
   - Renderizado concurrente de múltiples pistas en pantalla (ej. voz principal y coros con sus propios tiempos y posiciones sin colisiones).
-- [ ] **Componentes Reactivos al Ritmo 2D (`AudioWaveform2D.tsx` y `AudioPulse.tsx`):**
+- [x] **Componentes Reactivos al Ritmo 2D (`AudioWaveform2D.tsx` y `AudioPulse.tsx`):**
   - Barras espectrales y ondas sonoras generadas mediante Canvas/SVG reactivas a `bass`, `mid`, `treble` y `rms`.
   - Efectos de pulso y resplandor al compás cuando `isBeat === true`.
-- [ ] **Capa Conmutable de Zonas Seguras (`SafeZoneOverlay.tsx`):**
+- [x] **Capa Conmutable de Zonas Seguras (`SafeZoneOverlay.tsx`):**
   - Overlay translúcido que delimita los elementos de la interfaz de TikTok e Instagram Reels (botones de interacción a la derecha, descripción y barra de audio inferior).
   - Toggle de activación en el panel de propiedades de Remotion Studio (desactivado por defecto en la exportación final).
-- [ ] **Capa de Medios de Fondo:**
+- [x] **Capa de Medios de Fondo:**
   - Soporte para imagen estática con zoom sutil o video de fondo B-roll con `<OffthreadVideo />`, con filtros de desenfoque y viñeteado.
 
 ### 2.2 Criterio de Aceptación
@@ -96,15 +96,15 @@ flowchart TD
 
 ### 3.1 Tareas a Realizar
 
-- [ ] **Sistema de Resolución de Perfiles (`scripts/render/profile-resolver.ts`):**
+- [x] **Sistema de Resolución de Perfiles (`scripts/render/profile-resolver.ts`):**
   - Presets preconfigurados de referencia: `tiktok` (10 Mbps, GOP 60, VUI Rec. 709) y `whatsapp` (2.8 Mbps, GOP 30, &lt;16 MB).
   - Carga de perfiles personalizados declarados en `config.json` o en `encoding-profiles.json`.
   - Fusión en caliente con banderas de CLI (`--bitrate`, `--crf`, `--gop`, `--preset`, `--gpu`).
-- [ ] **Constructor de Argumentos FFmpeg (`buildFfmpegArgs`):**
+- [x] **Constructor de Argumentos FFmpeg (`buildFfmpegArgs`):**
   - Generación de la lista de argumentos para `overrideFfmpegArgs` de `@remotion/renderer`.
   - Inyección estricta de metadatos VUI (`-color_primaries bt709 -color_trc bt709 -colorspace bt709 -color_range tv`).
   - Soporte de aceleración por GPU NVIDIA (`h264_nvenc`) con fallback automático a CPU (`libx264`).
-- [ ] **Script CLI de Renderizado (`scripts/render-video.ts`):**
+- [x] **Script CLI de Renderizado (`scripts/render-video.ts`):**
   - Invocación mediante `npm run render -- --project <nombre> [opciones]`.
   - Empaquetado automático con `@remotion/bundler` y renderizado de frames con Chromium Headless.
   - Barra de progreso en la consola con porcentaje y estimación de tiempo.
@@ -123,9 +123,9 @@ flowchart TD
 
 | Hito       | Alcance Principal                             | Estado                | Dependencia Previa |
 | :---------- | :--------------------------------------------- | :--------------------- | :------------------ |
-| **Hito 1** | Fundación TS/Remotion + Ingesta CLI `prepare` | ⏳ **Siguiente Paso**  | Ninguna            |
-| **Hito 2** | Composición Visual 2D + Remotion Studio       | ⏸️ Pendiente          | Hito 1             |
-| **Hito 3** | Motor de Render FFmpeg + CLI `render`         | ⏸️ Pendiente          | Hito 2             |
+| **Hito 1** | Fundación TS/Remotion + Ingesta CLI `prepare` | Completado             | Ninguna            |
+| **Hito 2** | Composición Visual 2D + Remotion Studio       | Completado             | Hito 1             |
+| **Hito 3** | Motor de Render FFmpeg + CLI `render`         | Completado             | Hito 2             |
 
 
 
