@@ -8,6 +8,7 @@
     "prepare": "tsx scripts/prepare-project.ts",
     "start": "remotion preview src/index.ts --port 30900",
     "render": "tsx scripts/render-video.ts",
+    "pretest": "npm run prepare -- --project sample",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit",
