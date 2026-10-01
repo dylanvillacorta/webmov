@@ -1,0 +1,50 @@
+{
+  "name": "webmov",
+  "version": "1.0.0",
+  "description": "Pipeline programático de video vertical (9:16) con React, Remotion y FFmpeg",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare": "tsx scripts/prepare-project.ts",
+    "start": "remotion preview src/index.ts --port 30900",
+    "render": "tsx scripts/render-video.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:components": "vitest run tests/components",
+    "test:e2e": "vitest run tests/e2e",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.240",
+    "@remotion/cli": "^4.0.240",
+    "@remotion/renderer": "^4.0.240",
+    "meyda": "^5.6.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.240",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.0.1",
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "jsdom": "^25.0.1",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.2"
+  },
+  "keywords": [
+    "remotion",
+    "react",
+    "video",
+    "ffmpeg",
+    "subtitles",
+    "lyrics",
+    "karaoke"
+  ],
+  "author": "WebMov Team",
+  "license": "MIT"
+}
