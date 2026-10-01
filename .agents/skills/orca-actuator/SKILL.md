@@ -5,7 +5,7 @@ description: Protocolo para orquestar workspaces y agentes paralelos en Orca IDE
 
 # Orca Actuator & Parallel Agent Workflow
 
-Protocolo estándar para operar como **Agente Coordinador Central** y desplegar workspaces paralelos en Orca IDE bajo el modelo **Feature Lifecycle**, utilizando **Antigravity CLI** (`agy`) y la familia **Gemini 3.8 Flash**.
+Protocolo agnóstico y reutilizable para operar como **Agente Coordinador Central** y desplegar workspaces paralelos en Orca IDE bajo el modelo **Feature Lifecycle**, utilizando **Antigravity CLI** (`agy`) y la familia **Gemini 3.8 Flash**.
 
 ---
 
@@ -15,13 +15,13 @@ El paralelismo en Orca se organiza **por tarea o feature independiente**, no fra
 
 ```
                            AGENTE COORDINADOR CENTRAL
-                       (Workspace Raíz: develop - Flash High)
+                       (Workspace Raíz: Rama Base - Flash High)
                                        │
          ┌─────────────────────────────┴─────────────────────────────┐
          ▼                                                           ▼
 ┌─────────────────────────────────────────┐ ┌─────────────────────────────────────────┐
-│ WORKSPACE: feature/audio-processing     │ │ WORKSPACE: feature/lyrics-parser        │
-│ (Rama aislada: feature/audio-processing)│ │ (Rama aislada: feature/lyrics-parser)   │
+│ WORKSPACE: feature/modulo-a             │ │ WORKSPACE: feature/modulo-b             │
+│ (Rama aislada: feature/modulo-a)        │ │ (Rama aislada: feature/modulo-b)        │
 │                                         │ │                                         │
 │  Fase 1: Codificación                   │ │  Fase 1: Codificación                   │
 │  - Modelo: Gemini 3.8 Flash Low         │ │  - Modelo: Gemini 3.8 Flash Low         │
@@ -35,7 +35,7 @@ El paralelismo en Orca se organiza **por tarea o feature independiente**, no fra
          └─────────────────────────────┬─────────────────────────────┘
                                        ▼
                        Coordinador inspecciona diffs
-                       e integra hacia origin/develop
+                       e integra hacia la rama base
 ```
 
 ---
@@ -44,7 +44,7 @@ El paralelismo en Orca se organiza **por tarea o feature independiente**, no fra
 
 | Etapa del Ciclo de Vida | Dónde se Ejecuta | Modelo (`--model`) | Esfuerzo (`--effort`) | Propósito |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. Planificación & Arquitectura** | Workspace Raíz (`develop`) | `gemini-3.8-flash-high` | `high` | Diseñar interfaces, contratos y desglosar tareas del roadmap. |
+| **1. Planificación & Arquitectura** | Workspace Raíz (Rama Base) | `gemini-3.8-flash-high` | `high` | Diseñar interfaces, contratos y desglosar tareas del roadmap. |
 | **2. Codificación & Scaffolding** | Workspace de la Feature | `gemini-3.8-flash-low` *(o `medium`)* | `low` | Escribir componentes, tipos y lógica con máxima velocidad. |
 | **3. Testing, QA & Corrección** | **Mismo Workspace de la Feature** | `gemini-3.8-flash-high` | `high` | Diseñar tests exhaustivos, validar ejecución y corregir bugs in situ. |
 
@@ -53,10 +53,10 @@ El paralelismo en Orca se organiza **por tarea o feature independiente**, no fra
 ## 🔄 Ciclo de Vida de una Feature en Orca
 
 ### Paso 1: Crear el Workspace para la Feature
-* Toda rama se deriva obligatoriamente desde `origin/develop`.
+* Toda rama se deriva desde la rama base de integración del proyecto (`develop`, o `main` según la convención del repositorio).
 * Comando:
   ```powershell
-  orca worktree create --name feature/<nombre-tarea> --base-branch develop --no-parent --json
+  orca worktree create --name feature/<nombre-tarea> --base-branch <base-branch> --no-parent --json
   ```
 
 ### Paso 2: Ejecutar la Codificación (Flash Low)
@@ -73,7 +73,7 @@ Una vez que el código base está listo, en ese **mismo workspace** (aprovechand
 orca terminal create --worktree name:feature/<nombre-tarea> --title "QA-Testing" --command "agy -i '<instrucciones_de_testing_y_correccion>' --model gemini-3.8-flash-high --effort high --dangerously-skip-permissions" --focus --json
 ```
 
-* El agente de testing escribe la suite de pruebas, ejecuta `npm test` o el runner correspondiente, y si detecta fallos, **los corrige de inmediato sobre el código fuente local**.
+* El agente de testing escribe la suite de pruebas, ejecuta el runner de tests del proyecto (`npm test`, `pytest`, `cargo test`, etc.), y si detecta fallos, **los corrige de inmediato sobre el código fuente local**.
 
 ### Paso 4: Cierre del Workspace y Entrega al Coordinador
 Cuando la feature pasa todos los tests:
@@ -86,13 +86,13 @@ Cuando la feature pasa todos los tests:
    orca terminal close --worktree name:feature/<nombre-tarea> --all --json
    ```
 3. **El Coordinador Central revisa los cambios:**
-   * Revisa el diff (`git diff develop...feature/<nombre-tarea>`).
-   * Sigue el protocolo de [github-actuator](../github-actuator/SKILL.md) para solicitar aprobación del usuario e integrar a `develop`.
+   * Revisa el diff (`git diff <base-branch>...feature/<nombre-tarea>`).
+   * Sigue las directrices de Git del proyecto (o `github-actuator` si está disponible) para solicitar aprobación del usuario e integrar a la rama base.
 
 ---
 
 ## 🛑 Reglas de Seguridad y Coordinación
 
 1. **Localidad de Contexto:** Nunca separar el testing de la codificación en ramas diferentes para una misma funcionalidad. Deben convivir en el mismo workspace para evitar sobrecostos de sincronización y merge.
-2. **Un Solo Agente Central:** La sesión principal es la única que planifica, crea worktrees y orquesta la integración a `develop`.
+2. **Un Solo Agente Central:** La sesión principal es la única que planifica, crea worktrees y orquesta la integración a la rama base.
 3. **Límite de Concurrencia:** Máximo 2 o 3 workspaces paralelos activos al mismo tiempo para no saturar memoria RAM ni causar colisiones de puertos en dev servers.
