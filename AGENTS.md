@@ -27,6 +27,15 @@ Este repositorio contiene **WebMov**, un pipeline programático de generación d
    * **Prohibido commit o push automático:** siempre presentar resumen previo (`git status -s`, `git diff --stat`) y solicitar confirmación explícita al usuario en el chat antes de ejecutar `git commit` o `git push`.
    * **Prohibido push forzado (`--force`):** salvo indicación explícita.
 
+5. **Orquestación Paralela en Orca IDE (Modelo Feature Lifecycle):**
+   * Regido por la skill local [.agents/skills/orca-actuator/SKILL.md](.agents/skills/orca-actuator/SKILL.md).
+   * La sesión en el workspace raíz actúa como **Agente Coordinador Central** (Planificación con `gemini-3.8-flash-high`).
+   * **1 Workspace por Feature:** Cada worktree aborda una feature o tarea completa donde coexisten:
+     * **Codificación:** `gemini-3.8-flash-low` (o `medium`) con esfuerzo bajo (`--effort low`).
+     * **Testing & QA:** `gemini-3.8-flash-high` con esfuerzo alto (`--effort high`) sobre los mismos archivos locales.
+   * **Paralelismo Horizontal:** Orca se utiliza para avanzar múltiples features independientes en simultáneo.
+   * Creación de worktrees siempre derivados de `origin/develop`, terminales interactivas (`agy -i`), timeouts de espera y marcado de estado (`completed`) al finalizar.
+
 
 ---
 
