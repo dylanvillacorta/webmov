@@ -12,13 +12,11 @@ Para evitar el uso de datos simulados (*mocks*) y asegurar que cada componente s
 flowchart TD
     H1["<b>Hito 1: Fundación e Ingesta de Datos</b><br/>• Scaffolding TS + Remotion<br/>• CLI prepare: FFmpeg Audio FFT + Parser LRC<br/>• Proyecto projects/sample/"] --> H2
     H2["<b>Hito 2: Composición Visual (Remotion Studio)</b><br/>• Subtítulos cinéticos palabra por palabra (Karaoke)<br/>• Ondas 2D reactivas al ritmo (RMS, Bass, Beats)<br/>• Safe Zones conmutables de TikTok / Reels"] --> H3
-    H3["<b>Hito 3: Motor de Exportación FFmpeg</b><br/>• CLI render (@remotion/renderer)<br/>• Presets TikTok / WhatsApp + overrides en caliente<br/>• Inyección VUI Rec. 709 y GOP estricto"] -.-> H4
-    H4["<b>Hito 4 (Opcional / Backlog): Capa 3D Three.js</b><br/>• @react-three/fiber con frameloop='never'<br/>• Render determinista por useCurrentFrame()"]
+    H3["<b>Hito 3: Motor de Exportación FFmpeg</b><br/>• CLI render (@remotion/renderer)<br/>• Presets TikTok / WhatsApp + overrides en caliente<br/>• Inyección VUI Rec. 709 y GOP estricto"]
     
     style H1 fill:#1a365d,stroke:#2b6cb0,stroke-width:2px,color:#fff
     style H2 fill:#1a365d,stroke:#2b6cb0,stroke-width:2px,color:#fff
     style H3 fill:#1a365d,stroke:#2b6cb0,stroke-width:2px,color:#fff
-    style H4 fill:#2d3748,stroke:#4a5568,stroke-width:1px,stroke-dasharray: 5 5,color:#cbd5e0
 ```
 
 ---
@@ -128,6 +126,6 @@ flowchart TD
 | **Hito 1** | Fundación TS/Remotion + Ingesta CLI `prepare` | ⏳ **Siguiente Paso**  | Ninguna            |
 | **Hito 2** | Composición Visual 2D + Remotion Studio       | ⏸️ Pendiente          | Hito 1             |
 | **Hito 3** | Motor de Render FFmpeg + CLI `render`         | ⏸️ Pendiente          | Hito 2             |
-| **Hito 4** | Capa 3D Three.js Determinista                 | 💤 Opcional / Backlog | Hito 3             |
+
 
 
