@@ -19,6 +19,11 @@ Opciones de Perfil:
   --profile <perfil>      Preset de codificación (por defecto: defaultProfile de config.json o 'tiktok')
                           Presets disponibles: 'tiktok', 'whatsapp' o custom en config.json
 
+Control de Duracion / Rango:
+  --seconds, -s <seg>     Renderiza solo los primeros N segundos del video (ej: 5, 10.5)
+  --frames <cuadros>      Renderiza solo los primeros N cuadros del video (ej: 60, 150)
+  --range <inicio-fin>    Renderiza un rango de cuadros específico (ej: 0-89, 30-60)
+
 Overrides en Caliente:
   --bitrate <tasa>        Sobreescribe la tasa de bits (ej: 16M, 8M, 2800k)
   --crf <modo>            Activa modo CRF psicovisual (ej: 18, 21, 23)
@@ -30,6 +35,8 @@ Ejemplos:
   npm run render -- --project sample --profile tiktok
   npm run render -- --project sample --profile whatsapp
   npm run render -- --project sample --profile tiktok --bitrate 16M --gop 90
+  npm run render -- --project sample --seconds 5
+  npm run render -- --project sample --range 0-59
 `);
 }
 
@@ -43,6 +50,9 @@ async function main(): Promise<void> {
 
   let projectName: string | null = null;
   let cliProfile: string | null = null;
+  let cliSeconds: string | null = null;
+  let cliFrames: string | null = null;
+  let cliRange: string | null = null;
   const overrides: CliOverrides = {};
 
   for (let i = 0; i < args.length; i++) {
@@ -57,6 +67,38 @@ async function main(): Promise<void> {
       i++;
     } else if (arg.startsWith("--profile=")) {
       cliProfile = arg.split("=")[1];
+    } else if (arg === "--seconds" || arg === "-s") {
+      const next = args[i + 1];
+      if (next === undefined || (next.startsWith("-") && !/^-\d/.test(next))) {
+        console.error("❌ Error: Debe especificar un valor para '--seconds' o '-s'.");
+        process.exit(1);
+      }
+      cliSeconds = next;
+      i++;
+    } else if (arg.startsWith("--seconds=")) {
+      cliSeconds = arg.slice("--seconds=".length);
+    } else if (arg.startsWith("-s=")) {
+      cliSeconds = arg.slice("-s=".length);
+    } else if (arg === "--frames") {
+      const next = args[i + 1];
+      if (next === undefined || (next.startsWith("-") && !/^-\d/.test(next))) {
+        console.error("❌ Error: Debe especificar un valor para '--frames'.");
+        process.exit(1);
+      }
+      cliFrames = next;
+      i++;
+    } else if (arg.startsWith("--frames=")) {
+      cliFrames = arg.slice("--frames=".length);
+    } else if (arg === "--range") {
+      const next = args[i + 1];
+      if (next === undefined || (next.startsWith("-") && !/^-\d/.test(next))) {
+        console.error("❌ Error: Debe especificar un valor para '--range' (ej: '0-90').");
+        process.exit(1);
+      }
+      cliRange = next;
+      i++;
+    } else if (arg.startsWith("--range=")) {
+      cliRange = arg.slice("--range=".length);
     } else if (arg === "--bitrate") {
       overrides.bitrate = args[i + 1];
       i++;
@@ -72,6 +114,48 @@ async function main(): Promise<void> {
     } else if (arg === "--gpu") {
       overrides.useGpu = true;
     }
+  }
+
+  // Validación de exclusividad mutua de opciones de rango/duración
+  const rangeOptionsCount = [cliSeconds !== null, cliFrames !== null, cliRange !== null].filter(Boolean).length;
+  if (rangeOptionsCount > 1) {
+    console.error("❌ Error: No se pueden combinar las opciones '--seconds', '--frames' o '--range'. Elija solo una opción.");
+    process.exit(1);
+  }
+
+  // Validación temprana de sintaxis y formato
+  let parsedSeconds: number | null = null;
+  if (cliSeconds !== null) {
+    parsedSeconds = Number(cliSeconds);
+    if (isNaN(parsedSeconds) || parsedSeconds <= 0) {
+      console.error(`❌ Error: El parámetro '--seconds' debe ser un número positivo mayor a 0 (recibido: '${cliSeconds}').`);
+      process.exit(1);
+    }
+  }
+
+  let parsedFrames: number | null = null;
+  if (cliFrames !== null) {
+    parsedFrames = Number(cliFrames);
+    if (isNaN(parsedFrames) || !Number.isInteger(parsedFrames) || parsedFrames <= 0) {
+      console.error(`❌ Error: El parámetro '--frames' debe ser un número entero positivo mayor a 0 (recibido: '${cliFrames}').`);
+      process.exit(1);
+    }
+  }
+
+  let parsedRange: [number, number] | null = null;
+  if (cliRange !== null) {
+    const rangeMatch = cliRange.trim().match(/^(\d+)-(\d+)$/);
+    if (!rangeMatch) {
+      console.error(`❌ Error: El formato de '--range' es inválido (recibido: '${cliRange}'). Debe tener el formato '<inicio>-<fin>' con números enteros no negativos (ej: 0-90, 30-60).`);
+      process.exit(1);
+    }
+    const start = parseInt(rangeMatch[1], 10);
+    const end = parseInt(rangeMatch[2], 10);
+    if (start > end) {
+      console.error(`❌ Error: El rango de cuadros es inválido: el cuadro de inicio (${start}) no puede ser mayor al cuadro de fin (${end}).`);
+      process.exit(1);
+    }
+    parsedRange = [start, end];
   }
 
   if (!projectName) {
@@ -156,6 +240,43 @@ async function main(): Promise<void> {
     },
   });
 
+  // Calcular y validar frameRange respecto a la composición seleccionada
+  let frameRange: [number, number] | null = null;
+
+  if (parsedSeconds !== null) {
+    const requestedFrames = Math.round(parsedSeconds * composition.fps);
+    if (requestedFrames <= 0) {
+      console.error(`❌ Error: La duración solicitada (${parsedSeconds}s) equivale a 0 cuadros.`);
+      process.exit(1);
+    }
+    if (requestedFrames > composition.durationInFrames) {
+      console.error(
+        `❌ Error: La duración solicitada (${parsedSeconds}s = ${requestedFrames} cuadros) excede la duración total de la composición (${composition.durationInFrames} cuadros / ${(composition.durationInFrames / composition.fps).toFixed(1)}s).`
+      );
+      process.exit(1);
+    }
+    frameRange = [0, requestedFrames - 1];
+  } else if (parsedFrames !== null) {
+    if (parsedFrames > composition.durationInFrames) {
+      console.error(
+        `❌ Error: La cantidad de cuadros solicitada (${parsedFrames}) excede la duración total de la composición (${composition.durationInFrames} cuadros).`
+      );
+      process.exit(1);
+    }
+    frameRange = [0, parsedFrames - 1];
+  } else if (parsedRange !== null) {
+    const [start, end] = parsedRange;
+    if (start >= composition.durationInFrames || end >= composition.durationInFrames) {
+      console.error(
+        `❌ Error: El rango especificado [${start}-${end}] excede la duración total de la composición (0 a ${composition.durationInFrames - 1}).`
+      );
+      process.exit(1);
+    }
+    frameRange = [start, end];
+  }
+
+  const totalFrames = frameRange ? frameRange[1] - frameRange[0] + 1 : composition.durationInFrames;
+
   // 6. Preparar directorio de exportación
   const exportsDir = path.join(projectDir, "exports");
   fs.mkdirSync(exportsDir, { recursive: true });
@@ -167,7 +288,12 @@ async function main(): Promise<void> {
   const ffmpegArgs = buildFfmpegArgs(profile);
 
   // 7. Renderizar Video
-  console.log(`🎞️ Renderizando ${composition.durationInFrames} cuadros (${composition.width}x${composition.height} @ ${composition.fps} FPS)...`);
+  if (frameRange) {
+    console.log(`✂️ Rango parcial aplicado: cuadros [${frameRange[0]}, ${frameRange[1]}] (${totalFrames} cuadros / ${(totalFrames / composition.fps).toFixed(2)}s)`);
+    console.log(`🎞️ Renderizando ${totalFrames} cuadros (rango: ${frameRange[0]}-${frameRange[1]}) (${composition.width}x${composition.height} @ ${composition.fps} FPS)...`);
+  } else {
+    console.log(`🎞️ Renderizando ${composition.durationInFrames} cuadros (${composition.width}x${composition.height} @ ${composition.fps} FPS)...`);
+  }
 
   const startTime = Date.now();
   await renderMedia({
@@ -182,6 +308,7 @@ async function main(): Promise<void> {
     encodingBufferSize: profile.bufsize as any,
     x264Preset: (profile.preset as any) || "medium",
     crf: profile.crf,
+    frameRange: frameRange || null,
     inputProps: {
       config: projectConfig,
       audioAnalysis,
@@ -197,8 +324,8 @@ async function main(): Promise<void> {
       return args;
     },
     onProgress: ({ renderedFrames, encodedFrames }) => {
-      const percent = Math.floor((encodedFrames / composition.durationInFrames) * 100);
-      process.stdout.write(`\r⏳ Progreso: ${percent}% (Cuadro ${encodedFrames}/${composition.durationInFrames})`);
+      const percent = Math.min(100, Math.floor((encodedFrames / totalFrames) * 100));
+      process.stdout.write(`\r⏳ Progreso: ${percent}% (Cuadro ${encodedFrames}/${totalFrames})`);
     },
   });
 
