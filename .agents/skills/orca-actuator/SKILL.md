@@ -52,28 +52,36 @@ El paralelismo en Orca se organiza **por tarea o feature independiente**, no fra
 
 ## 🔄 Ciclo de Vida de una Feature en Orca
 
-### Paso 1: Crear el Workspace para la Feature
+### Paso 1: Crear el Workspace y Desplegar el Agente en la Terminal Principal
 * Toda rama se deriva desde la rama base de integración del proyecto (`develop`, o `main` según la convención del repositorio).
-* Comando:
+* **Despliegue Nativo Limpio (Recomendado):** Para evitar terminales vacías ("Terminal 1") o pestañas duplicadas ocultas en Orca, se utiliza el soporte nativo de Orca para lanzar a `antigravity` directamente en la terminal inicial:
   ```powershell
-  orca worktree create --name feature/<nombre-tarea> --base-branch <base-branch> --no-parent --json
+  orca worktree create --name feature/<nombre-tarea> --base-branch <base-branch> --agent antigravity --prompt "<instrucciones_de_codigo>" --no-parent --activate --json
   ```
+  * `--agent antigravity`: Lanza Antigravity en la **primera y única terminal** del workspace (`startupTerminal` / `agentTerminalHandle`), mostrando la TUI visual con logo y spinners en vivo inmediatamente.
+  * `--activate`: Sitúa la interfaz de Orca automáticamente en el nuevo workspace para que el usuario vea la ejecución gráfica en tiempo real.
+  * Del JSON devuelto por Orca, guardar el identificador de la terminal: `result.agentTerminalHandle` (o `result.startupTerminal.handle`).
 
-### Paso 2: Ejecutar la Codificación (Flash Low)
-Se levanta una terminal interactiva en el workspace con el modelo rápido:
-
-```powershell
-orca terminal create --worktree name:feature/<nombre-tarea> --title "Code" --command "agy -i '<instrucciones_de_codigo>' --model gemini-3.8-flash-low --effort low --dangerously-skip-permissions" --focus --json
-```
+### Paso 2: Sincronización y Espera de la Fase de Codificación
+* El Coordinador Central en la raíz no debe codificar a distancia. Espera la señal de que el agente secundario completó su turno interactivo en la TUI:
+  ```powershell
+  orca terminal wait --terminal <handle> --for tui-idle
+  ```
+  *(Si el agente se lanzó con un comando que finaliza el proceso de consola, se puede usar `--for exit`).*
 
 ### Paso 3: Ejecutar el Testing y Validación (Flash High) en el Mismo Workspace
-Una vez que el código base está listo, en ese **mismo workspace** (aprovechando los archivos locales, dependencias y contexto), se despacha la fase de testing con esfuerzo alto:
-
-```powershell
-orca terminal create --worktree name:feature/<nombre-tarea> --title "QA-Testing" --command "agy -i '<instrucciones_de_testing_y_correccion>' --model gemini-3.8-flash-high --effort high --dangerously-skip-permissions" --focus --json
-```
-
-* El agente de testing escribe la suite de pruebas, ejecuta el runner de tests del proyecto (`npm test`, `pytest`, `cargo test`, etc.), y si detecta fallos, **los corrige de inmediato sobre el código fuente local**.
+Una vez que el código base está listo, en ese **mismo workspace** (aprovechando los archivos locales, dependencias y contexto), se despacha la fase de testing:
+* **Opción A (Continuar en la misma terminal interactiva):**
+  ```powershell
+  orca terminal send --terminal <handle> --text "<instrucciones_de_testing_y_correccion>`n" --json
+  orca terminal wait --terminal <handle> --for tui-idle
+  ```
+* **Opción B (Lanzar sesión dedicada de QA):**
+  ```powershell
+  orca terminal create --worktree name:feature/<nombre-tarea> --title "QA-Testing" --command "agy -i '<instrucciones_de_testing_y_correccion>' --model gemini-3.8-flash-high --effort high --dangerously-skip-permissions" --focus --json
+  orca terminal wait --terminal <handle_qa> --for tui-idle
+  ```
+* El agente de testing ejecuta el runner de tests del proyecto (`npm test`, `pytest`, `cargo test`, `mvn test`, etc.), y si detecta fallos, **los corrige de inmediato sobre el código fuente local**.
 
 ### Paso 4: Cierre del Workspace y Entrega al Coordinador
 Cuando la feature pasa todos los tests:
@@ -99,8 +107,12 @@ Cuando la feature pasa todos los tests:
      - Escribir o modificar archivos de código fuente, configs o assets.
      - Crear archivos `package.json` o ejecutar `npm install` / `npm run`.
      - Crear ramas directas o conmutar de rama (`git checkout -b`) en el directorio raíz.
+     - **Modificar archivos de forma remota a través de rutas de worktrees** (ej. editar `~/orca/workspaces/...` desde la raíz). Toda codificación y ejecución debe ser llevada a cabo por el agente desplegado en dicho worktree.
    - **TODA** codificación, scaffolding, instalación de dependencias, scripts y tests debe residir y ejecutarse **exclusivamente dentro de los worktrees independientes** (`orca worktree create`).
-1. **Localidad de Contexto:** Nunca separar el testing de la codificación en ramas diferentes para una misma funcionalidad. Deben convivir en el mismo workspace para evitar sobrecostos de sincronización y merge.
-2. **Un Solo Agente Central:** La sesión principal es la única que planifica, crea worktrees y orquesta la integración a la rama base.
-3. **Límite de Concurrencia:** Máximo 2 o 3 workspaces paralelos activos al mismo tiempo para no saturar memoria RAM ni causar colisiones de puertos en dev servers.
-4. **Ciclo de Scripts en Package.json:** Dado que `prepare` es un hook nativo en npm que se ejecuta automáticamente tras `npm install`, en los nuevos worktrees el script `"prepare"` debe tolerar llamadas sin parámetros (ej. omitiendo si no hay flags) o `npm install` debe ejecutarse con `--ignore-scripts` para evitar fallos antes de que el CLI esté implementado.
+1. **Prevención de Terminales Huérfanas y Manejo de Comillas:**
+   - Usar preferentemente `orca worktree create ... --agent antigravity --prompt "..."` para que Orca asigne el agente a la terminal inicial (`Terminal 1`). Esto evita crear terminales vacías duplicadas y elimina problemas de truncado o escape de comillas en shells de Windows.
+2. **Localidad de Contexto:** Nunca separar el testing de la codificación en ramas diferentes para una misma funcionalidad. Deben convivir en el mismo workspace para evitar sobrecostos de sincronización y merge.
+3. **Un Solo Agente Central:** La sesión principal es la única que planifica, crea worktrees y orquesta la integración a la rama base.
+4. **Límite de Concurrencia:** Máximo 2 o 3 workspaces paralelos activos al mismo tiempo para no saturar memoria RAM ni causar colisiones de puertos en dev servers.
+5. **Ciclo de Scripts en Package.json:** Dado que `prepare` es un hook nativo en npm que se ejecuta automáticamente tras `npm install`, en los nuevos worktrees el script `"prepare"` debe tolerar llamadas sin parámetros (ej. omitiendo si no hay flags) o `npm install` debe ejecutarse con `--ignore-scripts` para evitar fallos antes de que el CLI esté implementado.
+6. **Entornos Docker Aislados:** Si el testing de integración o E2E requiere microservicios y bases de datos activas, ejecutar exclusivamente `.\scripts\workspaces\workspace.ps1 up` (basado en `docker-compose.workspace.yml`). Nunca levantar composes tradicionales con puertos fijos de host.
