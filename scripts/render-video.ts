@@ -16,7 +16,7 @@ Uso:
   npm run render -- --project <nombre_proyecto> [--profile <perfil>] [opciones]
 
 Opciones de Perfil:
-  --profile <perfil>      Preset de codificación (por defecto: 'tiktok')
+  --profile <perfil>      Preset de codificación (por defecto: defaultProfile de config.json o 'tiktok')
                           Presets disponibles: 'tiktok', 'whatsapp' o custom en config.json
 
 Overrides en Caliente:
@@ -42,7 +42,7 @@ async function main(): Promise<void> {
   }
 
   let projectName: string | null = null;
-  let profileName = "tiktok";
+  let cliProfile: string | null = null;
   const overrides: CliOverrides = {};
 
   for (let i = 0; i < args.length; i++) {
@@ -53,10 +53,10 @@ async function main(): Promise<void> {
     } else if (arg.startsWith("--project=")) {
       projectName = arg.split("=")[1];
     } else if (arg === "--profile") {
-      profileName = args[i + 1] || "tiktok";
+      cliProfile = args[i + 1] || null;
       i++;
     } else if (arg.startsWith("--profile=")) {
-      profileName = arg.split("=")[1];
+      cliProfile = arg.split("=")[1];
     } else if (arg === "--bitrate") {
       overrides.bitrate = args[i + 1];
       i++;
@@ -124,6 +124,7 @@ async function main(): Promise<void> {
   }
 
   // 3. RND-02: Resolver Perfil de Codificación FFmpeg
+  const profileName = cliProfile || projectConfig.defaultProfile || "tiktok";
   let profile;
   try {
     profile = resolveEncodingProfile(profileName, projectConfig, overrides);

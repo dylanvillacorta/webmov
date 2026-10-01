@@ -40,4 +40,30 @@ describe("Módulo F: CLI de Renderizado (render-video.ts)", () => {
       expect(output).toContain("Perfiles válidos: [tiktok, whatsapp]");
     }
   });
+
+  it("RND-07: Utiliza projectConfig.defaultProfile cuando no se pasa --profile", () => {
+    const tmpProjectDir = path.join(rootDir, "projects", "profile_test_project");
+    fs.mkdirSync(path.join(tmpProjectDir, "generated"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "generated", "audio-analysis.json"),
+      JSON.stringify({ _meta: {}, frames: [] })
+    );
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "config.json"),
+      JSON.stringify({ defaultProfile: "perfil_invalido_desde_config" })
+    );
+
+    try {
+      execSync("npx tsx scripts/render-video.ts --project profile_test_project", {
+        cwd: rootDir,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      expect.unreachable("Debería haber fallado al usar defaultProfile inválido del config.json");
+    } catch (err: any) {
+      const output = err.stderr ? err.stderr.toString() : err.stdout.toString();
+      expect(output).toContain("El perfil 'perfil_invalido_desde_config' no existe");
+    } finally {
+      fs.rmSync(tmpProjectDir, { recursive: true, force: true });
+    }
+  });
 });
