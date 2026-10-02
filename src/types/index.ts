@@ -65,6 +65,7 @@ export interface ProjectLayers {
   showWaveform?: boolean;
   showParticles?: boolean;
   enable3D?: boolean;
+  showSafeZones?: boolean;
 }
 
 export interface ProjectConfig {

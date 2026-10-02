@@ -59,4 +59,19 @@ describe("Módulo C: Orquestador CLI y Motor de Caché (prepare-project.ts)", ()
     expect(forceRun).toContain("Pista de letras 'backing' procesada");
     expect(forceRun).not.toContain("⚡ Audio al día (SKIP)");
   });
+
+  it("PRE-07: Preparación de proyecto 'make-you-mine' procesa audio y letras enhanced con timestamps por palabra", () => {
+    const run = execSync("npx tsx scripts/prepare-project.ts --project make-you-mine", {
+      cwd: rootDir,
+      stdio: ["ignore", "pipe", "pipe"],
+    }).toString();
+
+    expect(run).toContain("make-you-mine");
+    const jsonPath = path.join(rootDir, "projects", "make-you-mine", "generated", "lyrics", "make you mine.json");
+    expect(fs.existsSync(jsonPath)).toBe(true);
+    const data = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+    expect(data.lines.length).toBe(47);
+    expect(data.lines[0].words.length).toBe(4);
+    expect(data.lines[0].words[0].text).toBe("Make");
+  });
 });

@@ -126,4 +126,36 @@ describe("Módulo E: Componentes Visuales - KineticSubtitles (VIS-02, VIS-03, VI
 
     expect(queryByTestId("kinetic-subtitles-lead")).toBeNull();
   });
+
+  it("VIS-08: Estilo drawn/sketch con tinta negra (#18181B) y resaltador acuarela rosa coral (#FF5E7E)", () => {
+    // Frame 40 = 1333.3 ms ('Uno' activa, 'Dos' y 'Tres' futuras)
+    currentMockFrame = 40;
+
+    const { getByTestId } = render(
+      <KineticSubtitles
+        track={mockTrack}
+        config={{
+          trackId: "lead",
+          primaryColor: "#FF5E7E",
+          secondaryColor: "#18181B",
+          activeScale: 1.15,
+          fontSize: 56,
+        }}
+        fps={30}
+      />
+    );
+
+    const word0 = getByTestId("word-0");
+    const word1 = getByTestId("word-1");
+
+    // Palabra activa: resaltador acuarela rosa coral (#FF5E7E)
+    expect(word0.getAttribute("data-active")).toBe("true");
+    expect(word0.style.color).toBe("rgb(255, 94, 126)"); // #FF5E7E
+    expect(word0.style.background).toContain("#FF5E7E");
+    expect(word0.style.borderRadius).toBe("6px 8px 5px 7px");
+
+    // Palabra futura: trazada en tinta negra (#18181B)
+    expect(word1.getAttribute("data-future")).toBe("true");
+    expect(word1.style.color).toBe("rgb(24, 24, 27)"); // #18181B
+  });
 });
