@@ -238,4 +238,138 @@ describe("Módulo F: CLI de Renderizado (render-video.ts)", () => {
       expect(output).toContain("No se pueden combinar las opciones '--seconds', '--frames' o '--range'");
     }
   });
+
+  it("RND-17: Al omitir flags de rango se renderiza la totalidad del video calculando duración y dimensiones desde config.json", () => {
+    const tmpProjectDir = path.join(rootDir, "projects", "dynamic_config_test");
+    fs.mkdirSync(path.join(tmpProjectDir, "generated"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "config.json"),
+      JSON.stringify({
+        durationInFrames: 12,
+        fps: 30,
+        width: 720,
+        height: 1280,
+      })
+    );
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "generated", "audio-analysis.json"),
+      JSON.stringify({
+        _meta: {
+          generator: "webmov-audio-analyzer",
+          schemaVersion: "1.0.0",
+          frameCount: 60,
+          fps: 30,
+        },
+        frames: [],
+      })
+    );
+
+    try {
+      const output = execSync("npx tsx scripts/render-video.ts --project dynamic_config_test", {
+        cwd: rootDir,
+        stdio: ["ignore", "pipe", "pipe"],
+      }).toString();
+
+      expect(output).toContain("🎞️ Renderizando 12 cuadros (720x1280 @ 30 FPS)...");
+      expect(output).toContain("Cuadro 12/12");
+      expect(output).toContain("Exportación completada con éxito");
+
+      const latestVideo = getLatestExport("dynamic_config_test");
+      const probe = execSync(
+        `ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames,width,height -of default=noprint_wrappers=1 "${latestVideo}"`,
+        { stdio: ["ignore", "pipe", "pipe"] }
+      ).toString();
+
+      expect(probe).toContain("nb_frames=12");
+      expect(probe).toContain("width=720");
+      expect(probe).toContain("height=1280");
+    } finally {
+      fs.rmSync(tmpProjectDir, { recursive: true, force: true });
+    }
+  }, 60000);
+
+  it("RND-18: Al omitir flags de rango se calcula la duración dinámicamente desde audioAnalysis._meta.frameCount cuando config.durationInFrames no está definido", () => {
+    const tmpProjectDir = path.join(rootDir, "projects", "dynamic_meta_test");
+    fs.mkdirSync(path.join(tmpProjectDir, "generated"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "config.json"),
+      JSON.stringify({
+        fps: 30,
+      })
+    );
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "generated", "audio-analysis.json"),
+      JSON.stringify({
+        _meta: {
+          generator: "webmov-audio-analyzer",
+          schemaVersion: "1.0.0",
+          frameCount: 15,
+          fps: 30,
+        },
+        frames: [],
+      })
+    );
+
+    try {
+      const output = execSync("npx tsx scripts/render-video.ts --project dynamic_meta_test", {
+        cwd: rootDir,
+        stdio: ["ignore", "pipe", "pipe"],
+      }).toString();
+
+      expect(output).toContain("🎞️ Renderizando 15 cuadros (1080x1920 @ 30 FPS)...");
+      expect(output).toContain("Cuadro 15/15");
+      expect(output).toContain("Exportación completada con éxito");
+
+      const latestVideo = getLatestExport("dynamic_meta_test");
+      const probe = execSync(
+        `ffprobe -v error -select_streams v:0 -show_entries stream=nb_frames,width,height -of default=noprint_wrappers=1 "${latestVideo}"`,
+        { stdio: ["ignore", "pipe", "pipe"] }
+      ).toString();
+
+      expect(probe).toContain("nb_frames=15");
+      expect(probe).toContain("width=1080");
+      expect(probe).toContain("height=1920");
+    } finally {
+      fs.rmSync(tmpProjectDir, { recursive: true, force: true });
+    }
+  }, 60000);
+
+  it("RND-19: Validación de límites de rango utiliza la duración calculada dinámicamente para el proyecto", () => {
+    const tmpProjectDir = path.join(rootDir, "projects", "dynamic_limit_test");
+    fs.mkdirSync(path.join(tmpProjectDir, "generated"), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "config.json"),
+      JSON.stringify({
+        durationInFrames: 20,
+        fps: 30,
+      })
+    );
+    fs.writeFileSync(
+      path.join(tmpProjectDir, "generated", "audio-analysis.json"),
+      JSON.stringify({
+        _meta: {
+          generator: "webmov-audio-analyzer",
+          schemaVersion: "1.0.0",
+          frameCount: 20,
+          fps: 30,
+        },
+        frames: [],
+      })
+    );
+
+    try {
+      execSync("npx tsx scripts/render-video.ts --project dynamic_limit_test --frames 25", {
+        cwd: rootDir,
+        stdio: ["ignore", "pipe", "pipe"],
+      });
+      expect.unreachable("Debería haber fallado al exceder 20 cuadros");
+    } catch (err: any) {
+      const output = err.stderr ? err.stderr.toString() : err.stdout.toString();
+      expect(output).toContain(
+        "La cantidad de cuadros solicitada (25) excede la duración total de la composición (20 cuadros)."
+      );
+    } finally {
+      fs.rmSync(tmpProjectDir, { recursive: true, force: true });
+    }
+  }, 45000);
 });

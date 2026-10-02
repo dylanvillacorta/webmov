@@ -33,7 +33,7 @@ export const ProjectConfigSchema = z.object({
   fps: z.number().int().positive("'fps' debe ser un número positivo (ej: 30 o 60).").default(30),
   width: z.number().int().positive("'width' debe ser un número positivo (ej: 1080).").default(1080),
   height: z.number().int().positive("'height' debe ser un número positivo (ej: 1920).").default(1920),
-  durationInFrames: z.number().int().positive().default(300),
+  durationInFrames: z.number().int().positive().optional(),
   defaultProfile: z.string().min(1, "El 'defaultProfile' no puede ser una cadena vacía.").default("tiktok"),
   theme: z
     .object({

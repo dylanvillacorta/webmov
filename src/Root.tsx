@@ -1,5 +1,5 @@
 import React from "react";
-import { Composition } from "remotion";
+import { Composition, CalculateMetadataFunction } from "remotion";
 import {
   MainComposition,
   MainCompositionProps,
@@ -15,6 +15,20 @@ import sampleBackingLyrics from "../projects/sample/generated/lyrics/backing.jso
 import makeYouMineConfig from "../projects/make-you-mine/config.json";
 import makeYouMineAudioAnalysis from "../projects/make-you-mine/generated/audio-analysis.json";
 import makeYouMineLyrics from "../projects/make-you-mine/generated/lyrics/make you mine.json";
+
+export const calculateWebMovMetadata: CalculateMetadataFunction<MainCompositionProps> = ({
+  props,
+}) => {
+  return {
+    durationInFrames:
+      props?.config?.durationInFrames ||
+      props?.audioAnalysis?._meta?.frameCount ||
+      300,
+    fps: props?.config?.fps || 30,
+    width: props?.config?.width || 1080,
+    height: props?.config?.height || 1920,
+  };
+};
 
 export const Root: React.FC = () => {
   const defaultProps: MainCompositionProps = {
@@ -52,6 +66,7 @@ export const Root: React.FC = () => {
         height={height}
         schema={MainCompositionSchema}
         defaultProps={defaultProps}
+        calculateMetadata={calculateWebMovMetadata}
       />
       <Composition
         id="MakeYouMine"
