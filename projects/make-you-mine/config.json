@@ -1,0 +1,36 @@
+{
+  "title": "Make You Mine",
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "durationInFrames": 6372,
+  "defaultProfile": "tiktok",
+  "theme": {
+    "primaryColor": "#FF5E7E",
+    "secondaryColor": "#18181B",
+    "backgroundColor": "#FAF9F6",
+    "fontFamily": "Inter, Montserrat, sans-serif"
+  },
+  "subtitles": {
+    "tracks": [
+      {
+        "trackId": "make you mine",
+        "position": {
+          "y": "60%"
+        },
+        "fontSize": 56,
+        "primaryColor": "#FF5E7E",
+        "secondaryColor": "#18181B",
+        "opacity": 1,
+        "activeScale": 1.15
+      }
+    ]
+  },
+  "layers": {
+    "showSubtitles": true,
+    "showWaveform": true,
+    "showParticles": false,
+    "enable3D": false,
+    "showSafeZones": false
+  }
+}

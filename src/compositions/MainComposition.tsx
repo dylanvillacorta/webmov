@@ -7,6 +7,7 @@ import { AudioPulse } from "./AudioPulse";
 import { AudioWaveform2D } from "./AudioWaveform2D";
 import { KineticSubtitles } from "./KineticSubtitles";
 import { SafeZoneOverlay } from "./SafeZoneOverlay";
+import { DrawnArtOverlay } from "./DrawnArtOverlay";
 
 export const MainCompositionSchema = z.object({
   config: z.custom<ProjectConfig>(),
@@ -23,8 +24,9 @@ export const MainComposition: React.FC<MainCompositionProps> = ({
   audioAnalysis,
   lyricsTracks = {},
   audioUrl,
-  showSafeZones = false,
+  showSafeZones: propShowSafeZones,
 }) => {
+  const showSafeZones = propShowSafeZones ?? config?.layers?.showSafeZones ?? false;
   const primaryColor = config?.theme?.primaryColor || "#FFE600";
   const secondaryColor = config?.theme?.secondaryColor || "#FF0055";
   const backgroundColor = config?.theme?.backgroundColor || "#0A0A0A";
@@ -32,6 +34,18 @@ export const MainComposition: React.FC<MainCompositionProps> = ({
 
   const showSubtitles = config?.layers?.showSubtitles ?? true;
   const showWaveform = config?.layers?.showWaveform ?? true;
+
+  // Detección determinista de fondo claro / estilo artístico drawn
+  const isLight = (() => {
+    const clean = (backgroundColor || "").replace("#", "");
+    if (clean.length === 6) {
+      const r = parseInt(clean.substring(0, 2), 16);
+      const g = parseInt(clean.substring(2, 4), 16);
+      const b = parseInt(clean.substring(4, 6), 16);
+      return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
+    }
+    return false;
+  })();
 
   // Determinar pistas a renderizar
   const configuredTracks = config?.subtitles?.tracks || [];
@@ -53,6 +67,15 @@ export const MainComposition: React.FC<MainCompositionProps> = ({
         backgroundColor={backgroundColor}
         primaryColor={primaryColor}
         secondaryColor={secondaryColor}
+      />
+
+      {/* 1.5. Decoraciones Artísticas Dibujadas a Mano (Drawn / Sketch para fondos claros) */}
+      <DrawnArtOverlay
+        analysis={audioAnalysis}
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+        title={config?.title || "MAKE YOU MINE"}
+        isLight={isLight}
       />
 
       {/* 2. Capa Reactiva de Audio (Onda 2D y Pulso) */}

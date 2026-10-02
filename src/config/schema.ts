@@ -63,6 +63,7 @@ export const ProjectConfigSchema = z.object({
       showWaveform: z.boolean().default(true),
       showParticles: z.boolean().default(true),
       enable3D: z.boolean().default(false),
+      showSafeZones: z.boolean().default(false),
     })
     .default({}),
   customProfiles: z.record(z.any()).optional(),

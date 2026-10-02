@@ -50,6 +50,7 @@ chromium/
 projects/*
 !projects/.gitkeep
 !projects/sample/
+!projects/make-you-mine/
 projects/*/generated/
 projects/*/exports/
 workspaces/*
@@ -69,6 +70,7 @@ tmp/
 *.wav
 *.flac
 !projects/sample/sources/audio/*
+!projects/make-you-mine/sources/audio/*
 
 # --- Logs y Diagnóstico ---
 logs/

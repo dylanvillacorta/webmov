@@ -91,4 +91,20 @@ describe("Módulo B: Parser de Letras Multi-Pista (lrc-parser.ts)", () => {
     expect(lines[0].words[0].text).toBe("¡Canción");
     expect(lines[0].words[3].text).toBe("🚀");
   });
+
+  it("LRC-10: Parsea Enhanced LRC con marcas intermedias palabra por palabra", () => {
+    const lrc = `[00:04.45] <00:04.45> Make <00:04.85> you <00:05.25> mine, <00:06.30> oh-oh\n[00:09.18] <00:09.18> I <00:09.45> know <00:09.85> we've <00:10.25> gone`;
+    const lines = parseLrcContent(lrc, "make you mine.lrc");
+
+    expect(lines.length).toBe(2);
+    expect(lines[0].words.length).toBe(4);
+    expect(lines[0].words[0].text).toBe("Make");
+    expect(lines[0].words[0].startMs).toBe(4450);
+    expect(lines[0].words[0].endMs).toBe(4850);
+    expect(lines[0].words[1].text).toBe("you");
+    expect(lines[0].words[1].startMs).toBe(4850);
+    expect(lines[0].words[1].endMs).toBe(5250);
+    expect(lines[0].words[2].text).toBe("mine,");
+    expect(lines[0].words[3].text).toBe("oh-oh");
+  });
 });

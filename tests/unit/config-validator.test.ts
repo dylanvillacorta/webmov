@@ -84,4 +84,36 @@ describe("Módulo D: Configuración y Validación de Esquemas (config.json)", ()
       })
     ).toThrow(/defaultProfile/);
   });
+
+  it("CFG-07: Valida configuración drawn/sketch con fondo blanco, tinta negra y safe zones", () => {
+    const sketchConfig = {
+      title: "Make You Mine",
+      theme: {
+        primaryColor: "#FF5E7E",
+        secondaryColor: "#18181B",
+        backgroundColor: "#FAF9F6",
+      },
+      layers: {
+        showSafeZones: false,
+      },
+      subtitles: {
+        tracks: [
+          {
+            trackId: "make you mine",
+            position: { y: "60%" },
+            fontSize: 56,
+            primaryColor: "#FF5E7E",
+            secondaryColor: "#18181B",
+          },
+        ],
+      },
+    };
+
+    const validated = validateProjectConfig(sketchConfig);
+    expect(validated.theme?.backgroundColor).toBe("#FAF9F6");
+    expect(validated.theme?.primaryColor).toBe("#FF5E7E");
+    expect(validated.theme?.secondaryColor).toBe("#18181B");
+    expect(validated.layers?.showSafeZones).toBe(false);
+    expect(validated.subtitles?.tracks?.[0].secondaryColor).toBe("#18181B");
+  });
 });
