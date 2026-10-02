@@ -1,6 +1,10 @@
 import React from "react";
 import { Composition } from "remotion";
-import { MainComposition, MainCompositionProps } from "./compositions/MainComposition";
+import {
+  MainComposition,
+  MainCompositionProps,
+  MainCompositionSchema,
+} from "./compositions/MainComposition";
 
 // Carga de datos de muestra para el entorno de desarrollo interactivo (Remotion Studio)
 import sampleConfig from "../projects/sample/config.json";
@@ -30,13 +34,14 @@ export const Root: React.FC = () => {
 
   return (
     <>
-      <Composition<any, any>
+      <Composition
         id="WebMovMain"
         component={MainComposition}
         durationInFrames={durationInFrames}
         fps={fps}
         width={width}
         height={height}
+        schema={MainCompositionSchema}
         defaultProps={defaultProps}
       />
     </>

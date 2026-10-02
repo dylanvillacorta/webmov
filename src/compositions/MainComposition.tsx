@@ -1,5 +1,6 @@
 import React from "react";
 import { Audio } from "remotion";
+import { z } from "zod";
 import type { AudioAnalysisData, LyricsTrackData, ProjectConfig } from "../types";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { AudioPulse } from "./AudioPulse";
@@ -7,13 +8,15 @@ import { AudioWaveform2D } from "./AudioWaveform2D";
 import { KineticSubtitles } from "./KineticSubtitles";
 import { SafeZoneOverlay } from "./SafeZoneOverlay";
 
-export interface MainCompositionProps {
-  config: ProjectConfig;
-  audioAnalysis?: AudioAnalysisData;
-  lyricsTracks?: Record<string, LyricsTrackData>;
-  audioUrl?: string;
-  showSafeZones?: boolean;
-}
+export const MainCompositionSchema = z.object({
+  config: z.custom<ProjectConfig>(),
+  audioAnalysis: z.custom<AudioAnalysisData>().optional(),
+  lyricsTracks: z.record(z.custom<LyricsTrackData>()).optional(),
+  audioUrl: z.string().optional(),
+  showSafeZones: z.boolean().optional(),
+});
+
+export type MainCompositionProps = z.infer<typeof MainCompositionSchema>;
 
 export const MainComposition: React.FC<MainCompositionProps> = ({
   config,
