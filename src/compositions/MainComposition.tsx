@@ -8,6 +8,7 @@ import { AudioWaveform2D } from "./AudioWaveform2D";
 import { KineticSubtitles } from "./KineticSubtitles";
 import { SafeZoneOverlay } from "./SafeZoneOverlay";
 import { DrawnArtOverlay } from "./DrawnArtOverlay";
+import { MakeYouMineComposition } from "./MakeYouMineComposition";
 
 export const MainCompositionSchema = z.object({
   config: z.custom<ProjectConfig>(),
@@ -34,6 +35,19 @@ export const MainComposition: React.FC<MainCompositionProps> = ({
 
   const showSubtitles = config?.layers?.showSubtitles ?? true;
   const showWaveform = config?.layers?.showWaveform ?? true;
+
+  // Delegar automáticamente al diseño exclusivo para Make You Mine
+  if (config?.title?.toLowerCase() === "make you mine") {
+    return (
+      <MakeYouMineComposition
+        config={config}
+        audioAnalysis={audioAnalysis}
+        lyricsTracks={lyricsTracks}
+        audioUrl={audioUrl}
+        showSafeZones={showSafeZones}
+      />
+    );
+  }
 
   // Detección determinista de fondo claro / estilo artístico drawn
   const isLight = (() => {

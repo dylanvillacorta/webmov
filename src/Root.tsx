@@ -5,6 +5,7 @@ import {
   MainCompositionProps,
   MainCompositionSchema,
 } from "./compositions/MainComposition";
+import { MakeYouMineComposition, MakeYouMineSchema } from "./compositions/MakeYouMineComposition";
 
 // Carga de datos de muestra para el entorno de desarrollo interactivo (Remotion Studio)
 import sampleConfig from "../projects/sample/config.json";
@@ -15,6 +16,7 @@ import sampleBackingLyrics from "../projects/sample/generated/lyrics/backing.jso
 import makeYouMineConfig from "../projects/make-you-mine/config.json";
 import makeYouMineAudioAnalysis from "../projects/make-you-mine/generated/audio-analysis.json";
 import makeYouMineLyrics from "../projects/make-you-mine/generated/lyrics/make you mine.json";
+import makeYouMineAudio from "../projects/make-you-mine/sources/audio/01 - Make You Mine (feat. Moa Lisa).mp3";
 
 export const Root: React.FC = () => {
   const defaultProps: MainCompositionProps = {
@@ -52,21 +54,39 @@ export const Root: React.FC = () => {
         height={height}
         schema={MainCompositionSchema}
         defaultProps={defaultProps}
+        calculateMetadata={({ props }) => {
+          const cfg = props?.config;
+          const analysis = props?.audioAnalysis;
+          const dynamicDuration =
+            cfg?.durationInFrames ||
+            analysis?._meta?.frameCount ||
+            durationInFrames;
+          const dynamicFps = cfg?.fps || fps;
+          const dynamicWidth = cfg?.width || width;
+          const dynamicHeight = cfg?.height || height;
+          return {
+            durationInFrames: dynamicDuration,
+            fps: dynamicFps,
+            width: dynamicWidth,
+            height: dynamicHeight,
+          };
+        }}
       />
       <Composition
         id="MakeYouMine"
-        component={MainComposition}
+        component={MakeYouMineComposition}
         durationInFrames={makeYouMineDuration}
         fps={makeYouMineConfig.fps || 30}
         width={makeYouMineConfig.width || 1080}
         height={makeYouMineConfig.height || 1920}
-        schema={MainCompositionSchema}
+        schema={MakeYouMineSchema}
         defaultProps={{
           config: makeYouMineConfig as any,
           audioAnalysis: makeYouMineAudioAnalysis as any,
           lyricsTracks: {
             "make you mine": makeYouMineLyrics as any,
           },
+          audioUrl: makeYouMineAudio,
           showSafeZones: false,
         }}
       />
